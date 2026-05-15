@@ -1,0 +1,285 @@
+% Suppress benign font substitution warnings from XeLaTeX/LuaLaTeX
+\RequirePackage{silence}
+\WarningFilter{latexfont}{Font shape}
+\WarningFilter{latexfont}{Some font shapes}
+
+\documentclass[journal]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+
+\begin{document}
+
+\title{A Novel PAPR Reduction Scheme for OFDM Systems Based on Neural Networks}
+
+\author{\IEEEauthorblockN{Feng Zou, Zhijun Liu, Xin Hu, and Gang Wang}
+}
+
+\maketitle
+
+\begin{abstract}
+Orthogonal frequency division multiplexing (OFDM) is extensively applied in the downlink of narrowband Internet of Things (NB-IoT). However, the high peak-to-average power ratio (PAPR) of OFDM systems leads to a decrease in transmitter efficiency. Therefore, the researchers proposed the artificial neural network (ANN) based PAPR reduction schemes. However, these schemes have the disadvantages of high complexity or cannot overcome the defects of traditional schemes. In this paper, a novel PAPR reduction scheme based on neural networks (NNs) is proposed for OFDM systems. This scheme establishes a PAPR reduction module based on NN, which is trained using the low PAPR data obtained by the simplified clipping and filtering (SCF) method. To overcome the defect of poor BER performance of the SCF scheme, a recovery module is introduced at the receiver, to recover the distorted signal. To realize the improvement of BER performance and the reduction of PAPR simultaneously, the two modules are jointly trained based on multiobjective optimization. Experimental results based on a 100 MHz OFDM signal show that this scheme can reduce PAPR by 4.5 dB. Meanwhile, the BER of this scheme can be reduced to 0.001 times that of the SCF scheme.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Orthogonal frequency division multiplexing (OFDM), narrowband Internet of Things (NB-IoT), peak-to-average power ratio (PAPR), artificial neural network (ANN).
+\end{IEEEkeywords}
+
+\section{Introduction}
+Internet of Things (IoT) technologies are getting more and more attention, with the connection of a large number of devices \cite{b1}\cite{b2}\cite{b3}. The development of IoT technologies will enable a large number of low-cost devices to be deployed and connected, facilitating the design and implementation of low-power networks. Therefore, IoT will become a gateway for applications such as smart city systems \cite{b4}. In order to adapt to the strict constraints on bandwidth and power caused by the large-scale deployment of devices, the narrowband IoT (NB-IoT) standard was proposed \cite{b4}, \cite{b5}. The downlink of NB-IoT systems adopts orthogonal frequency division multiplexing (OFDM) systems \cite{b6}. However, a large subcarrier number leads to a high peak-to-average power ratio (PAPR) in OFDM systems \cite{b7}. To meet the linearization requirements, high PAPR systems will require the power amplifier (PA) to perform more power back-off, thus reducing the energy efficiency of the transmitter \cite{b8}, \cite{b9}. Even if linearization techniques such as digital predistortion (DPD) are used to extend the linear region, they cannot ensure efficient operation of the transmitter \cite{b10}. The research on PAPR reduction technology has become a hot direction to improve the efficiency of the transmitter \cite{b11}, \cite{b12}.
+
+Traditional PAPR reduction schemes are mainly divided into two categories. One of the most widely used PAPR reduction schemes is signal distortion techniques \cite{b12}, including clipping and filtering (CF), iterative CF (ICF), and simplified CF (SCF) \cite{b13}. An ICF scheme based on the time-domain kernel matrix is proposed, to reduce the computational complexity \cite{b14}. In addition, the literature \cite{b15} also proposed a noise-shaped ICF scheme based on optimization methods. The clipping and filtering operations of these schemes can reduce the PAPR and also lead to signal distortion, so the bit error rate (BER) of the system is reduced \cite{b8}. But these schemes are simple to implement. In particular, the SCF scheme only needs one iteration to achieve the reduction of PAPR \cite{b13}. Another feasible traditional schemes for reducing PAPR are the signal scrambling techniques, including partial transmission sequence and selective mapping \cite{b16}. The literature \cite{b17} also proposed a tone reservation scheme based on the fast iterative shrinkage-thresholding algorithm, to improve BER performance. These schemes need to obtain the scrambled sequences that can reduce the PAPR and may require sending corresponding information to the receiver for decoding \cite{b16}. However, these operations lead to large computational complexity \cite{b11} and reduce the utilization of subcarriers.
+
+Recently, artificial neural networks (ANNs) have gained many applications in the field of wireless communication due to their powerful nonlinear function approximation ability \cite{b18}, \cite{b19}, which encourages researchers to apply it in the field of PAPR reduction \cite{b8}, \cite{b11}, \cite{b13}, \cite{b20}. At present, PAPR reduction schemes based on ANN are mainly divided into two categories. The first proposed schemes are to use ANN to build the PAPR reduction model, which is trained using the label data generated by the traditional schemes. For example, Sohn and Kim \cite{b13} proposed to use the SCF scheme to generate label data with low PAPR, to update the PAPR reduction model based on a neural network (NN). Wang et al. \cite{b20} proposed to construct a PAPR reduction model using a multilayer feedforward neural network (FNN), and the data generated by the tone reservation (TR) scheme were used to train the model. These schemes effectively reduce the complexity of the PAPR reduction process using ANN but do not break through the limitations of traditional schemes \cite{b11}. Then, another ANN-based PAPR reduction schemes were proposed based on multiobjective optimization. For example, literature \cite{b11} proposed to use the deep neural network (DNN) model to find the coding method of low PAPR, to realize the purpose of PPAR reduction. However, with the increase in the subcarrier number, the complexity of the DNN model will increase significantly \cite{b8}. How to use a simple PAPR reduction model to break through the limitations of traditional schemes has become an important research hotspot.
+
+This paper proposes a novel PAPR reduction scheme based on NN for OFDM systems. This scheme uses single-layer NN to build the PAPR reduction module, which is trained with the label data generated by the SCF scheme. In order to overcome the disadvantage of poor BER performance in the SCF scheme, a recovery module is constructed at the receiver, to recover the distorted signal. In order to reduce the PAPR of the system and minimize BER simultaneously, the PAPR reduction module and recovery module are jointly updated based on multiobjective optimization. Because the two modules are constructed using simple NNs, the complexity of the proposed model is very low.
+
+This paper is arranged as follows. In Section II, the system model and the traditional SCF scheme are described. The structure and training method of the proposed model are analyzed in detail in Section III. Section IV compares and analyzes the proposed scheme with other typical schemes. In Section V, the conclusion of this paper is given.
+
+\section{System Model and SCF Scheme}
+
+\subsection{System Model}
+OFDM modulation is widely applied in the downlink of NB-IoT systems. In the OFDM system, the data bits are firstly modulated by the Quadrature Amplitude Modulation (QAM) to generate the data symbol $X = [X_0, X_1, \dots, X_{K-1}]$. Then, the generated data symbol vector $X$ is modulated onto the $K$ subcarriers by the inverse fast Fourier transform (IFFT), to generate an OFDM symbol. The generated symbol $x(n)$ is written as
+
+\begin{equation}
+x(n) = \frac{1}{\sqrt{K}} \sum_{k=0}^{K-1} X_k e^{j2\pi kn/K}, \quad n = 0, 1, \cdots, K - 1.
+\label{eq1}
+\end{equation}
+
+To evaluate the power envelope fluctuation performance, the PAPR of signal $x(n)$ is expressed as
+\begin{equation}
+PAPR_{x(n)} = \frac{\text{Max}\left[|x(n)|^2\right]}{E\left[|x(n)|^2\right]},
+\label{eq2}
+\end{equation}
+
+where $\text{Max} [\cdot]$ is for calculating the maximum value; $E[\cdot]$ is for calculating the mean value.
+To test the effect of the PAPR's reduction between different methods, the complementary cumulative distribution function (CCDF) of PAPR is expressed as
+
+\begin{equation}
+\text{CCDF}_{\text{PAPR}} = \Pr (\text{PAPR} > \text{PAPR}_0),
+\label{eq3}
+\end{equation}
+where $PAPR_0$ means given clip level.
+
+\subsection{SCF Scheme}
+In order to realize the PAPR’s reduction, researchers proposed to reduce the PAPR value by clipping operation and eliminate the out-of-band distortion by filtering operation, namely, CF scheme \cite{b21}. The filtering operation will again lead to an increase in PAPR, so the ICF scheme is proposed. However, multiple iterations in the ICF scheme lead to a large number of fast Fourier transform (FFT) operations \cite{b13}, which leads to high implementation complexity. To reduce the computational complexity, the SCF method can reduce PAPR and eliminate the out-of-band distortion by only one iteration \cite{b22}. The SCF scheme is described as follows.
+
+(1) Clip the original OFDM signal $x(n)$
+The clipped signal $x'(n)$ can be expressed as
+\begin{equation}
+x'(n) =
+\begin{cases}
+x(n), & |x(n)| \leq A, \\
+\frac{A}{|x(n)|} x(n), & |x(n)| > A,
+\end{cases}
+\label{eq4}
+\end{equation}
+where $A = CR \sqrt{P_{av}}$ means clipping threshold, $P_{av}$ means the original signal’s average power, and $CR$ is clipping ratio.
+
+(2) Calculate frequency-domain clipping noise $F(k)$
+The clipping noise $f(n)$ can be obtained:
+\begin{equation}
+f(n) = x(n) - x'(n).
+\label{eq5}
+\end{equation}
+The frequency-domain clipping noise $F(k)$ is obtained by FFT for clipping noise $f(n)$.
+
+(3) Filter the out-of-band signal of clipping noise
+The frequency-domain clipping noise after filtering out out-of-band distortion is written as
+\begin{equation}
+\tilde{F}(k) =
+\begin{cases}
+F(k), & \text{In-band}, \\
+0, & \text{Out-of-band}.
+\end{cases}
+\label{eq6}
+\end{equation}
+
+(4) Calculate the frequency-domain signal of the low PAPR signal
+The frequency-domain signal $\tilde{F}(k)$ is used to reduce the signal’s PAPR, and the frequency-domain signal with low PAPR is written as
+\begin{equation}
+\bar{X}(k) = X(k) - \beta \tilde{F}(k),
+\label{eq7}
+\end{equation}
+where $X(k)$ means the frequency-domain signal of $x(n)$; $\beta = (1 - (1 - \alpha)^{3k/2}) / (1 - (1 - \alpha)^{3/2})$, $\alpha = (2^{3/2} / \sqrt{3\pi}) / (\sigma/A)$, and $\sigma$ is the standard deviation.
+
+(5) Obtain PAPR reduction signal $\bar{x}(n)$ by IFFT for frequency-domain clipping signal $\bar{X}(k)$
+The SCF scheme is a feasible way to reduce the signal’s PAPR, but the scheme needs to operate each OFDM symbol in turn, so the implementation process is still complex. Meanwhile, the clipping operation brings distortion to the signal, thus reducing the BER of the system.
+
+\section{The Proposed PAPR Reduction Scheme Based on NN}
+
+\subsection{The Structure of the Proposed PAPR Reduction Scheme}
+To solve the problems of the complex implementation process and BER performance degradation of the SCF scheme, this paper proposes the PAPR reduction model based on NN. The proposed model consists of two modules: the PAPR reduction module and the recovery module, as shown in Figure \ref{fig1}. The PAPR reduction module is used to express the PAPR reduction process of the SCF scheme. To overcome the defect of the low BER performance of the SCF scheme, a recovery module is built in the receiver, to recover the transmission signal. The NN-based PAPR reduction module contains three layers: one input layer, one fully connected (FC) layer, and one output layer. The input layer of the module includes two nodes, corresponding to the in-phase and orthogonal (I/Q) components of $x(n)$, which are described as
+
+\begin{equation}
+\mathbf{x} = [x_I(n), x_Q(n)]^T,
+\label{eq8}
+\end{equation}
+where $x_I(n)$ and $x_Q(n)$ are the I/Q components of $x(n)$.
+
+The FC layer uses the weights and biases to extract the effective information from the input data. The relationship can be expressed as
+\begin{equation}
+\mathbf{h}^p = \boldsymbol{\omega}^p \mathbf{x} + \mathbf{b}^p,
+\label{eq9}
+\end{equation}
+where $\boldsymbol{\omega}^p$ is the weight matrix with a dimension of $T_1 \ast 2$, and $T_1$ is the neuron number of the FC layer. $\mathbf{b}^p$ means the bias with a dimension of $T_1 \ast 1$. Then, the information is passed through the nonlinear activation function, to obtain the nonlinear fitting ability, which is expressed as
+
+\begin{equation}
+\mathbf{s}^p = f_1(\mathbf{h}^p),
+\label{eq10}
+\end{equation}
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{Figures/1.png}}
+\caption{The framework of the proposed PAPR reduction scheme based on NN.}
+\label{fig1}
+\end{figure}
+
+where $f_1(\cdot)$ represents the nonlinear activation function. Finally, the output layer uses this information to obtain the model output, which is described as
+
+\begin{equation}
+\mathbf{r} = [r_I(n), r_Q(n)]^T = \boldsymbol{\omega}^{o1} \mathbf{s}^p + \mathbf{b}^{o1},
+\label{eq11}
+\end{equation}
+where $\boldsymbol{\omega}^{o1}$ is the weight with a dimension $2 \ast T_1$, and $\mathbf{b}^{o1}$ is the bias in the output layer with a dimension of $2 \ast 1$. The low PAPR signal $r(n)$ can be described as $r(n) = r_I(n) + i * r_Q(n)$. The label of the module is the I/Q components of the low PAPR signal $\bar{x}(n)$ obtained through the SCF scheme, which is described as
+
+\begin{equation}
+\mathbf{\bar{x}} = [\bar{x}_I(n), \bar{x}_Q(n)]^T,
+\label{eq12}
+\end{equation}
+where $\bar{x}_I(n)$ and $\bar{x}_Q(n)$ are the I/Q components of the low PAPR signal $\bar{x}(n)$, respectively.
+
+The output signal $r(n)$ of the PAPR reduction module is transmitted by transmitting antenna after passing through the digital-to-analog converter (DAC) module and the upconversion module. The receiving end receives the analog signal through the receiving antenna and then obtains the digital signal $\hat{r}(n)$ through the downconversion module and the analog-to-digital converter (ADC). The recovery module at the receiving end reconstructs the transmission signal through the received signal $\hat{r}(n)$.
+
+The recovery module based on NN also contains three layers: one input layer, one FC layer, and one output layer. The input layer of the recovery module contains two nodes, corresponding to the received signal $\hat{r}(n)$'s I/Q components, which are described as
+
+\begin{equation}
+\mathbf{\hat{r}} = [\hat{r}_I(n), \hat{r}_Q(n)]^T,
+\label{eq13}
+\end{equation}
+where $\hat{r}_I(n)$ and $\hat{r}_Q(n)$ are the received signal $\hat{r}(n)$'s I/Q components, respectively.
+
+The FC layer of the recovery module extracts information from the input data by the weights and biases and then fits the features through the nonlinear activation function, which can be expressed as
+
+\begin{equation}
+\mathbf{s}^r = f_2(\boldsymbol{\omega}^r \mathbf{\hat{r}} + \mathbf{b}^r),
+\label{eq14}
+\end{equation}
+where $\omega_r$ is the weight matrix with a dimension of $T_2 \times 2$, and $T_2$ is the neuron number of the FC layer. $b_r$ is the bias with a dimension of $T_2 \times 1$. $f_2(\cdot)$ represents the nonlinear activation function. Finally, the output layer fits the module output, which is expressed as
+
+\begin{equation}
+\mathbf{\hat{x}} = [\hat{x}_I(n), \hat{x}_Q(n)]^T = \boldsymbol{\omega}^{o2} \mathbf{s}^r + \mathbf{b}^{o2},
+\label{eq15}
+\end{equation}
+where $\omega_{o2}$ is the weight with dimension $2 \times T_2$, and $b_{o2}$ is the bias in the output layer with a dimension of $2 \times 1$. The reconstructed signal $\hat{x}(n)$ is obtained by $\hat{x}(n) = \hat{x}_I(n) + j\hat{x}_Q(n)$. The label of the recovery module is the original OFDM signal $x(n)$'s I/Q components. Therefore, the coefficients of the proposed model can be summarized as $\theta = \{\boldsymbol{\omega}^p, \mathbf{b}^p, \boldsymbol{\omega}^{o1}, \mathbf{b}^{o1}, \boldsymbol{\omega}^r, \mathbf{b}^r, \boldsymbol{\omega}^{o2}, \mathbf{b}^{o2}\}$.
+
+\subsection{Training of the Proposed PAPR Reduction Model}
+To reduce PAPR and minimize the system's BER simultaneously, the two modules of the proposed model are updated simultaneously, that is, update coefficients $\theta$ of the two modules at the same time. The PAPR reduction module fits the process of the PAPR's reduction of the SCF scheme, so the original OFDM signal $x(n)$ is used to obtain the label $\bar{x}(n)$ through the SCF scheme, and then, the label data $\bar{x}$ can be obtained according to Equation (\ref{eq12}). We analyze the constraints of each module to get the cost function of model training.
+
+The PAPR reduction module is required to fit the process of the PAPR's reduction of the SCF scheme, so the output data of the module is required to approximate the output data of the SCF scheme, that is, $r$ approximates to $\bar{x}$. We define the mean square error (MSE) function to characterize this objective, which is expressed as
+
+\begin{equation}
+m_1(\theta) = \frac{1}{2N} \sum_{n=0}^{N-1} ( (r_I(n) - \bar{x}_I(n))^2 + (r_Q(n) - \bar{x}_Q(n))^2 ),
+\label{eq16}
+\end{equation}
+where $N$ represents the group number of training data.
+
+In order to overcome the poor BER performance of the SCF scheme, a recovery module is introduced into the receiver. Therefore, the recovery module is required to recover the original signal by the received signal, that is, the output data of the recovery module is close to the original data. We also represent this objective through the MSE function, which is expressed as
+
+\begin{equation}
+m_2(\theta) = \frac{1}{2N} \sum_{n=0}^{N-1} ( (\hat{x}_I(n) - x_I(n))^2 + (\hat{x}_Q(n) - x_Q(n))^2 ).
+\label{eq17}
+\end{equation}
+
+The objective function $m_1(\theta)$ is the training target of the PAPR reduction module, and the objective function $m_2(\theta)$ is the training target of the recovery module. Since the two modules are jointly trained, the cost function of model training should contain the two objective functions. We describe the cost function $m(\theta)$ of training as
+
+\begin{equation}
+m(\theta) = m_1(\theta) + \alpha m_2(\theta),
+\label{eq18}
+\end{equation}
+where $\alpha$ represents the weight of the objective function $m_2(\theta)$. The larger $\alpha$ is, the more important the objective function $m_2(\theta)$ is.
+
+The output $r$ and $\hat{x}$ of the two modules can be obtained from Equations (\ref{eq11}) and (\ref{eq15}). Then, the two modules can be updated using the Adam optimization algorithm \cite{b23} based on the cost function $m(\theta)$ in Equation (\ref{eq18}). During the training, the objective functions $m_1(\theta)$ and $m_2(\theta)$ are calculated based on the outputs of the two modules, and then, the cost function $m(\theta)$ is calculated. According to the cost function, the coefficients of the model are updated using the Adam optimization algorithm. In the next iteration, the cost function is calculated again using the updated model coefficients. When the iteration number of model training is satisfied, the training is terminated. When the proposed model converges, it means that the two objective functions converge, namely, the PAPR's reduction and the BER's minimization are realized at the same time.
+
+\section{Simulation Results}
+
+\subsection{Simulation Platform}
+In the simulation system, a 100 MHz OFDM signal containing 1024 orthonormal subcarriers is used to verify the proposed scheme. The number of available subcarriers is 816. The modulation mode of the data symbol vector is 16-QAM. The OFDM signal consists of 500 OFDM symbols, including 512,000 sets of data. 8000 sets of data were used to update the model. The wireless communication channel in the simulation system is modeled as an additive white Gaussian noise (AWGN) channel, and the signal-to-noise ratio (SNR) is determined as 20 dB during the training process of the model.
+
+According to the experimental results, the weight of the objective function $m_2(\theta)$ is set as $\alpha = 2$. To verify the superiority of the proposed scheme, the proposed scheme is compared with the ICF scheme, SCF scheme, and NN-based SCF scheme in terms of CCDF performance and BER performance. The clipping ratio $CR$ in the ICF scheme is set to 2.2, and the number of iterations is set to 8. The parameter clipping ratio $CR$ in the SCF scheme is set to 1.3, and the standard deviation $\sigma$ is $\sqrt{0.5}$. The hidden layer of the NN-based SCF scheme contains 10 neurons, and the activation function is ``tanh''.
+
+\subsection{Experimental Results}
+Figure \ref{fig2} shows the convergence curve of the training of the PAPR reduction model. 8000 sets of data were used to train the model, and independent 8000 sets of data were used to test the cost function of the model during each iteration. It can be found that the proposed model converges synchronously on the training set and the test set, and the values of the cost function are almost equal. Therefore, the proposed model has converged after 20,000 iterations without overfitting. The subsequent test results are based on the trained model.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{Figures/2.png}}
+\caption{Convergence curve of model training.}
+\label{fig2}
+\end{figure}
+
+Figure \ref{fig3} expresses the CCDF performance of PAPR for our scheme and other typical schemes. The CCDF performance of these schemes is estimated using the OFDM signal containing 500 OFDM symbols. The PAPR of the output signal of the ICF scheme is 6.90 dB, that of the SCF scheme is 7.17 dB, that of the NN-based SCF scheme is 6.99 dB, and that of the proposed scheme is 6.51 dB. As shown in the figure, for a 0.01 CCDF, our scheme can achieve a 4.5 dB PAPR reduction, compared with the original OFDM signal. The SCF scheme and the NN-based SCF scheme can achieve 4.1 dB and 4.3 dB PAPR reduction, compared with the OFDM signal, for 0.01 CCDF, which is slightly worse than that of our scheme. ICF can only achieve a 3.7 dB PAPR reduction for 0.01 CCDF, which is 0.8 dB worse than that of our scheme. The test results verify the superiority of our scheme in PAPR performance.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{Figures/3.png}}
+\caption{CCDFs of PAPR for the proposed scheme and other typical schemes.}
+\label{fig3}
+\end{figure}
+
+Figure \ref{fig4} shows the BER performance of our scheme and other schemes under different SNR. As shown in the figure, our scheme's BER can reach $1.8 \times 10^{-6}$ when SNR is 20 dB, which is much lower than that of other schemes. The BER performance of the SCF scheme and NN-based SCF scheme is about 0.002 when SNR is 20 dB, which is about 1000 times that of our scheme. The ICF method's BER is $4 \times 10^{-4}$ when SNR is 20 dB, which is about 200 times that of our scheme. Compared with the SCF scheme and NN-based SCF scheme, the PAPR performance of the proposed scheme has a small improvement as shown in Figure \ref{fig3}, but the BER performance has a significant improvement as shown in Figure \ref{fig4} (with the same PAPR conditions), which proves the superiority of the proposed scheme.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{Figures/4.png}}
+\caption{Comparison of BER performance between the proposed scheme and other schemes.}
+\label{fig4}
+\end{figure}
+
+Figure \ref{fig5} shows the BER performance of the proposed scheme under different weight $\alpha$. $\alpha$ represents the weight of the objective function $m_2(\theta)$, to determine the importance of the recovery module to reconstruct the signal. As can be seen from Figure \ref{fig5}, the larger the weight $\alpha$ is, the better the BER performance is, and the fitting effect for the SCF scheme will decrease accordingly.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{Figures/5.png}}
+\caption{BER performance of the proposed scheme under different weight $\alpha$.}
+\label{fig5}
+\end{figure}
+
+Figure \ref{fig6} shows the linearization effect after performing DPD on the low PAPR signal, where the indirect learning architecture (ILA) is used to update the DPD coefficients. The test PA is a Doherty PA with a small-signal gain of 28 dB and a saturation power of 43 dBm. DPD is modeled as a generalized memory polynomial (GMP) model \cite{b24}. It can be found that the adjacent channel peak-to-average ratio (ACPR) performance ($\pm 25$ MHz) can be reduced to -46 dB through DPD. Therefore, the proposed PAPR reduction scheme can be implemented before DPD.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{Figures/6.png}}
+\caption{The linearization effect after performing DPD on the low PAPR signal.}
+\label{fig6}
+\end{figure}
+
+\section{Conclusions}
+In this paper, a novel PAPR reduction scheme based on NN is proposed for OFDM systems. This scheme uses the PAPR reduction module based on NN to fit the PAPR reduction process of the SCF scheme, to reduce the PAPR of the signal. To break through the defect of poor BER performance of the SCF scheme, a recovery module based on NN is introduced in the receiver, to recover the distorted transmission signal. Simulation results based on the 100 MHz OFDM signal show the effectiveness of the scheme. This scheme can realize a 4.5 dB PAPR reduction for 0.01 CCDF. Meanwhile, the BER of the proposed scheme can be reduced to 0.005 times that of other schemes when SNR is 20 dB.
+
+\begin{thebibliography}{00}
+\bibitem{b1} X. Liu, X. B. Zhai, W. Lu, and C. Wu, “QoS-guarantee resource allocation for multibeam satellite industrial internet of things with NOMA,” IEEE Trans. Ind. Informat., vol. 17, no. 3, pp. 2052–2061, 2021.
+\bibitem{b2} X. Liu and X. Zhang, “NOMA-based resource allocation for cluster-based cognitive industrial internet of things,” IEEE Trans. Ind. Informat., vol. 16, no. 8, pp. 5379–5388, 2020.
+\bibitem{b3} S. Vappangi and V. M. Vakamulla, “Synchronization in visible light communication for smart cities,” IEEE Sensors J., vol. 18, no. 5, pp. 1877–1886, 2018.
+\bibitem{b4} Y. Iraqi and A. Al-Dweik, “Efficient information transmission using smart OFDM for IoT applications,” IEEE Internet Things J., vol. 7, no. 9, pp. 8397–8409, 2020.
+\bibitem{b5} X. Liu and X. Zhang, “Rate and energy efficiency improvements for 5G-based IoT with simultaneous transfer,” IEEE Internet Things J., vol. 6, no. 4, pp. 5971–5980, 2019.
+\bibitem{b6} T. Xu and I. Darwazeh, “Non-orthogonal narrowband internet of things: a design for saving bandwidth and doubling the number of connected devices,” IEEE Internet Things J., vol. 5, no. 3, pp. 2120–2129, 2018.
+\bibitem{b7} I. Sohn, “A low complexity PAPR reduction scheme for OFDM systems via neural networks,” IEEE Commun. Lett., vol. 18, no. 2, pp. 225–228, 2014.
+\bibitem{b8} Z. Liu, X. Hu, K. Han et al., “Low-complexity PAPR reduction method for OFDM systems based on real-valued neural networks,” IEEE Wireless Commun. Lett., vol. 9, no. 11, pp. 1840–1844, 2020.
+\bibitem{b9} F. Sandoval, G. Poitau, and F. Gagnon, “Hybrid peak-to-average power ratio reduction techniques: review and performance comparison,” IEEE Access, vol. 5, pp. 27145–27161, 2017.
+\bibitem{b10} R. Zayani, H. Shaïek, and D. Roviras, “Ping-pong joint optimization of PAPR reduction and HPA linearization in OFDM systems,” IEEE Trans. Broadcast., vol. 65, no. 2, pp. 308–315, 2019.
+\bibitem{b11} M. Kim, W. Lee, and D. H. Cho, “A novel PAPR reduction scheme for OFDM system based on deep learning,” IEEE Commun. Lett., vol. 22, no. 3, pp. 510–513, 2018.
+\bibitem{b12} H. Li, J. Wei, and N. Jin, “Low-complexity tone reservation scheme using pre-generated peak-canceling signals,” IEEE Commun. Lett., vol. 23, no. 9, pp. 1586–1589, 2019.
+\bibitem{b13} I. Sohn and S. C. Kim, “Neural network based simplified clipping and filtering technique for PAPR reduction of OFDM signals,” IEEE Commun. Lett., vol. 19, no. 8, pp. 1438–1441, 2015.
+\bibitem{b14} X. Liu, X. Zhang, J. Xiong, F. Gu, and J. Wei, “An enhanced iterative clipping and filtering method using time-domain kernel matrix for PAPR reduction in OFDM systems,” IEEE Access, vol. 7, pp. 59466–59476, 2019.
+\bibitem{b15} X. Liu, X. Zhang, L. Zhang et al., “PAPR reduction using iterative clipping/filtering and ADMM approaches for OFDM-based mixed-numerology systems,” IEEE Trans. Wireless Commun., vol. 19, no. 4, pp. 2586–2600, 2020.
+\bibitem{b16} D. Qu, L. Li, and T. Jiang, “Invertible subset LDPC code for PAPR reduction in OFDM systems with low complexity,” IEEE Trans. Wireless Commun., vol. 13, no. 4, pp. 2204–2213, 2014.
+\bibitem{b17} Y. Wang, S. Xie, and Z. Xie, “FISTA-based PAPR reduction method for tone reservation's OFDM system,” IEEE Wireless Commun. Lett., vol. 7, no. 3, pp. 300–303, 2018.
+\bibitem{b18} X. Hu, Z. J. Liu, X. F. Yu et al., “Convolutional neural network for behavioral modeling and predistortion of wideband power amplifiers,” IEEE Trans. Neural Networks and Learning Systems, pp. 1–15, 2021.
+\bibitem{b19} Z. Liu, X. Hu, T. Liu, X. Li, W. Wang, and F. M. Ghannouchi, “Attention-based deep neural network behavioral model for wideband wireless power amplifiers,” IEEE Microwave and Wireless Components Lett., vol. 30, no. 1, pp. 82–85, 2020.
+\bibitem{b20} B. Wang, Q. Si, and M. Jin, “A novel tone reservation scheme based on deep learning for PAPR reduction in OFDM systems,” IEEE Commun. Lett., vol. 24, no. 6, pp. 1271–1274, 2020.
+\bibitem{b21} S. H. Han and J. H. Lee, “Modulation, coding and signal processing for wireless communications - an overview of peak-to-average power ratio reduction techniques for multicarrier transmission,” IEEE Wireless Commun., vol. 12, no. 2, pp. 56–65, 2005.
+\bibitem{b22} L. Wang and C. Tellambura, “A simplified clipping and filtering technique for PAR reduction in OFDM systems,” IEEE Signal Process. Lett., vol. 12, no. 6, pp. 453–456, 2005.
+\bibitem{b23} D. P. Kingma and J. Ba, “Adam: a method for stochastic optimization,” in Proc. 3rd International Conference for Learning Representations (ICLR 2015), pp. 7–9, San Diego, USA, 2015.
+\bibitem{b24} D. R. Morgan, Z. Ma, J. Kim, M. G. Zierdt, and J. Pastalan, “A generalized memory polynomial model for digital predistortion of RF power amplifiers,” IEEE Trans. Signal Process., vol. 54, no. 10, pp. 3852–3860, 2006.
+\end{thebibliography}
+
+\end{document}

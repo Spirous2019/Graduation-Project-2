@@ -1,0 +1,226 @@
+% Suppress benign font substitution warnings from XeLaTeX/LuaLaTeX
+\RequirePackage{silence}
+\WarningFilter{latexfont}{Font shape}
+\WarningFilter{latexfont}{Some font shapes}
+
+\documentclass[conference]{IEEEtran}
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+
+\begin{document}
+
+\title{Deep Unfolding Network for PAPR Reduction in Multi-Carrier OFDM Systems}
+
+\author{\IEEEauthorblockN{Minh-Thang Nguyen, Georges Kaddoum, Bassant Selim, K. V. Srinivas, and Paulo Freitas de Araujo-Filho}
+}
+
+\maketitle
+
+\begin{abstract}
+In this letter, we propose a Deep Unfolding Network called PR-DUN to reduce the peak-to-average power ratio (PAPR), which is a thorny problem in Orthogonal Frequency-Division Multiplexing (OFDM) systems. The proposed multi-layer model is constructed by unrolling an iterative algorithm resulting in layers with trainable parameters, which are optimized to minimize a loss function related to the PAPR value. The deep unfolding model uses the backpropagation algorithm to transfer gradients backwards to adjust parameters. Furthermore, the proposed scheme can accommodate any transmit power constraint, and therefore can control the power increase caused by the auxiliary signal. Simulation results show that the proposed PR-DUN model achieves a larger PAPR reduction and a smaller bit error rate while being less computationally intensive than related solutions.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Peak-to-average power ratio (PAPR), bit error rate (BER), orthogonal frequency-division multiplexing (OFDM), deep unfolding network.
+\end{IEEEkeywords}
+
+\section{Introduction}
+In Orthogonal Frequency-Division Multiplexing (OFDM) systems, a large peak-to-average power ratio (PAPR) can cause the power amplifiers (PAs) to operate in the nonlinear regime, and therefore lead to signal distortion and data rate degradation. To suppress the PAPR, the algorithm proposed in \cite{b1} obtains a peak-cancellation signal through an iterative algorithm that relies on the Signal to Clipping noise power Ratio (SCR), which has several advantages. It reduces the PAPR without increasing signal distortions or modifying the modulation/demodulation scheme by reserving a small set of sub-carriers in the frequency domain to inject peak-cancellation signals. Further, it requires side information only if the reserved sub-carriers’ positions change and it has low computational complexity as it avoids multiple Fast Fourier Transform (FFT) and Inverse FFT (IFFT) operations. However, \cite{b1} relies on a static threshold that does not fully exploit the power of the reserved sub-carriers to generate peak-cancellation signals, thus limiting the PAPR reduction. In addition, it does not consider the transmit power increment that results from the added auxiliary signal.
+
+To facilitate the sub-carrier reservation, the works in \cite{b2}–\cite{b4} proposed iterative algorithms based on the least squares approximation of the clipping noise. They aim to reduce the convergence time at the expense of increasing the computational complexity. The work in \cite{b5}, on the other hand, optimized the sub-carrier reservation set in the frequency domain using a genetic algorithm, and adopted the SCR algorithm to suppress peaks. However, due to the dynamic input signal, it is impossible for the methods in \cite{b2}–\cite{b5} to control the power. Moreover, the static setting of the PAPR threshold in these works limits the PAPR reduction achieved, and can even cause violations of transmit power constraints.
+
+The works in \cite{b6}–\cite{b10} rely on neural network models, which are black-box optimization methods, to alleviate the PAPR problem. In \cite{b6}, a neural network is trained to approximate the desired output signal pattern by modifying the constellation so that the PAPR is reduced. However, due to the dynamic input signal, distortion due to the modified constellation can lead to decoding errors. In \cite{b7}, the encoder and decoder of an autoencoder network substitute the modulation and demodulation modules, respectively, simultaneously minimizing the PAPR and inter-symbol interference. However, when the channel conditions vary, the modulated signal suffers from an I/Q imbalance resulting in an increased bit error rate (BER) at the receiver. Similarly, to simultaneously reduce the PAPR and improve the signal reconstruction, a real-valued neural network is designed in \cite{b8}. But the I/Q imbalance is also a critical factor that challenges the robustness of this network against varying channel conditions. The works in \cite{b9}, \cite{b10} generate peak cancellation signals using neural network models to exploit the advantages of the sub-carrier reservation method. The models, however, consider a static PAPR threshold while ignoring the power limitation, which limits the PAPR reduction.
+
+We develop a low-complexity approach by unrolling the SCR algorithm as a multiple-layer model called the peak-reduction deep unfolding network (PR-DUN). Our proposed model adaptively generates auxiliary signals to suppress power peaks for dynamic input signals. In a nutshell, the main contributions of our work include: (i) each layer has one trainable parameter that is optimized to minimize a loss function of the peaks, so the proposed model requires very few parameters to be fine-tuned; (ii) a training algorithm is developed to train our proposed model to reduce PAPR; (iii) an algorithm for guaranteeing the power limitation is embedded into the model; and (iv) via simulation, we show that our proposed model achieves the largest PAPR reduction among the related works, its inference time is short, and it is robust to varying channel conditions.
+
+\section{System Model}
+Without loss of generality, we consider an OFDM system where a block of bits is mapped into the N-element complex-valued OFDM vector of QAM constellation points $X = [X_0, X_1, \dots, X_{N-1}]^T$, with $X_k$ being the complex symbol located at the $k$th sub-carrier.
+
+\begin{equation}
+x_n = \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} X_k e^{\frac{j2\pi nk}{N}}.
+\end{equation}
+
+In the matrix form, we have the equivalent $\mathbf{x} = \mathbf{Q} \mathbf{X}$, where $\mathbf{Q}$ is the N-point IFFT matrix.
+
+The PAPR of signal $\mathbf{x}$ is computed as the ratio of its peak power to its average power, i.e., $\text{PAPR}(\mathbf{x}) = \max_{0\leqslant n\leqslant N-1} |x_n|^2 / E\left[\|\mathbf{x}\|_2^2\right]$. To measure the PAPR reduction performance, we consider the Complementary Cumulative Distribution Function (CCDF), which denotes the probability that the PAPR exceeds a certain threshold $\text{PAPR}_{th}$, as follows
+
+\begin{equation}
+\text{CCDF} (\mathbf{x}) = \Pr (\text{PAPR}(\mathbf{x}) > \text{PAPR}_{th}) .
+\end{equation}
+
+The sub-carrier reservation method reserves several slots in the frequency domain for an auxiliary signal $\mathbf{c} = [c_0, c_1, \dots, c_{N-1}]^T$ to cancel peak powers. The frequency domain of the auxiliary signal is denoted as $\mathbf{C} = [C_0, C_1, \dots, C_{N-1}]^T$. The data and auxiliary signal are arranged in disjoint positions in the frequency domain, such that $X_k+C_k = X_k$ for $k \notin RS$, and $X_k+C_k = C_k$ for $k \in RS$. To reduce the PAPR, the auxiliary signal $\mathbf{c}$ is obtained by solving the following optimization problem
+
+\begin{equation}
+\min_{\mathbf{c}} \max_{0\leqslant n\leqslant N-1} |x_n + c_n| .
+\label{eq1}
+\end{equation}
+
+Since \eqref{eq1} is a quadratically constrained quadratic programming (QCQP) problem, the optimal solution can be obtained using a quadratic programming solver.
+
+\section{Deep Unfolding Network for PAPR Reduction}
+We describe the PR-DUN model, shown in Fig.~\ref{fig1}, then show its PAPR reduction and a power control algorithm. After that, we present the training algorithm and the computational complexity analysis.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{Figures/1.png}}
+\caption{Architecture of the proposed PR-DUN.}
+\label{fig1}
+\end{figure}
+
+\subsection{Network Architecture}
+The $l$-th layer of our proposed PR-DUN model is given by
+
+\begin{equation}
+\mathbf{\bar{x}}^{(l)} = \mathbf{x} + \mathbf{c}^{(l)},
+\label{eq2}
+\end{equation}
+
+\begin{equation}
+n_l = \arg \max_{0\leqslant n<N} \left|\mathbf{\bar{x}}^{(l)} [n]\right|,
+\label{eq3}
+\end{equation}
+
+\begin{equation}
+\alpha^{(l)} = f_{act} \left( w^{(l)} \sqrt{E\left[\|\mathbf{x}\|^2\right]} + \left|\mathbf{\bar{x}}^{(l)} [n_l]\right| \right) e^{j\angle\left(\mathbf{\bar{x}}^{(l)}[n_l]\right)},
+\label{eq4}
+\end{equation}
+
+\begin{equation}
+\mathbf{c}^{(l+1)} = \Pi_\Omega \left( \mathbf{c}^{(l)} - \alpha^{(l)} \mathbf{p} \left[((n - n_l))_N\right] \right),
+\label{eq5}
+\end{equation}
+
+where a set of $L$ variables $\mathbf{w} = \{w^{(1)}, \dots, w^{(L)}\}$ is optimized using a stochastic optimization algorithm, and $f_{act}$ is an activation function, for which we select the rectified linear unit (ReLU) that allows positive magnitude value. Moreover, $\mathbf{p} = [p_1, p_2, \dots, p_{N-1}]^T$ presents the discrete-time domain kernel, $\mathbf{p} \left[((n - n_l))_N\right]$ is the right circular shift operator of vector $\mathbf{p}$ by $n_l$, and $\alpha^{(l)}$ is a scaling factor, which is updated every iteration.
+
+In \eqref{eq5}, the operand $\Pi_\Omega(\mathbf{y})$ denotes the projection of $\mathbf{y}$ on to the feasible set $\Omega$ of signal $\mathbf{c}$. The set $\Omega$ is given as $\Omega = \{\mathbf{c} | E\left[\|\mathbf{x} + \mathbf{c}\|_2^2\right] \leqslant \delta^2\}$, where $\delta^2$ is the power threshold. Note that the set $\Omega$ is convex, and is in fact a ball with center $\mathbf{x}$ and radius $\delta$. Accordingly, the orthogonal projection on the set $\Omega$ is given as
+
+\begin{equation}
+\Pi_\Omega(\mathbf{y}) = -\mathbf{x} + \frac{\delta}{\max \left\{ \sqrt{E\left[\|\mathbf{x} + \mathbf{y}\|_2^2\right]}, \delta \right\}} (\mathbf{x} + \mathbf{y}) .
+\label{eq6}
+\end{equation}
+
+Our method differs from the SCR algorithm in \cite{b1} in two ways. First, \eqref{eq4} updates $\alpha^{(l)}$ adaptively for the $l$-th layer using trainable coefficient $w^{(l)}$ and the activation function $f_{act}$. Due to the auxiliary signal, the transmit power increases and can exceed the maximum allowable value. Second, to satisfy the power limitation, \eqref{eq5} is used to fine tune the auxiliary signal.
+
+\subsection{Loss Function and Batch Training}
+To suppress power peaks, the loss function for training the PR-DUN is the $\mathtt{PRR}$ value, which is expressed as
+
+\begin{equation}
+\mathtt{Loss} = \mathtt{PRR}(\mathbf{x}, \mathbf{c}),
+\label{eq7}
+\end{equation}
+
+where $\mathtt{PRR}(\mathbf{x}, \mathbf{c})$ is a peak reduction ratio, for signals $\mathbf{x}$ and $\mathbf{c}$, given by
+
+\begin{equation}
+\mathtt{PRR}(\mathbf{x}, \mathbf{c}) = \frac{\max_{0\leqslant n\leqslant N-1} |x_n + c_n|^2}{E\left[\|\mathbf{x}\|_2^2\right]} .
+\end{equation}
+
+The loss function for training a batch of data of size $B$ is given by
+
+\begin{equation}
+\mathtt{Loss}_B = \frac{1}{B} \sum_{i=0}^{B-1} \mathtt{PRR}(\mathbf{x}_i, \mathbf{c}_i),
+\label{eq8}
+\end{equation}
+
+The batch training loss is used to optimize the parameter $w$. Fortunately, the unfolded network allows using the backpropagation algorithm to transfer gradients backwards to optimize the parameters. Moreover, the deep unfolding network allows more flexibility in applying convex optimization.
+
+We summarize the training algorithm in Algorithm 1.
+
+\subsection{Complexity Analysis}
+A complexity analysis of the SCR \cite{b1}, SLM \cite{b11}, the RNN \cite{b8}, and, PRnet \cite{b7} techniques is shown in Table I. The SCR method is an iterative algorithm that generates an auxiliary signal to soft clip peaks. It involves several loops and a sorting algorithm, so its computational complexity is $O(L \log_2 N)$. The SLM algorithm’s complexity, on the other hand, depends on the number of candidate phase sequences and the number of sub-carriers. In the RNN model, the number of trainable parameters depends on the hidden layer’s size $K$, the number of the hidden layers $L$, the binary input size $M$, the output size $N$, and the number of parallel neural networks $P$. Compared to the RNN and PRnet models, our proposed PR-DUN model requires fewer parameters to be trained. The computational complexity of the PR-DUN model is similar to that of the SCR algorithm and significantly smaller than the others.
+
+\begin{table}[htbp]
+\caption{Complexity comparison for different techniques.}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\textbf{Algorithm} & \textbf{Complexity} \\
+\hline
+SCR \cite{b1} & Computational complexity $O(L \log_2 N)$ \\
+\hline
+SLM \cite{b11} & Computational complexity $O(M N^2)$ \\
+\hline
+RNN \cite{b8} & Number of trainable parameters \\
+& $P (K^2(L - 2) + K + K(L - 2) + 2N + 2KN + KNM)$ \\
+& Computational complexity $O(P K(L + 2N))$ \\
+\hline
+PRnet \cite{b7} & Number of trainable parameters \\
+& $2(K^2(L - 2) + K + K(L - 2) + 2N + 2KN + KNM)$ \\
+& Computational complexity $O(K(L + 2N))$ \\
+\hline
+PR-DUN & Number of trainable parameters is only L \\
+& Computational complexity $O(L \log_2 N)$ \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\section{Simulation Results}
+In this section we evaluate the performance of the proposed PR-DUN model through simulations.
+
+The PAPR performance of the PR-DUN versus the transmit power constraint $\delta^2$ is demonstrated in Fig.~\ref{fig2}. In this experiment, $\delta^2$ is varied from 23dBm to 32dBm ($\delta^2 = 23, 26, 29, 32$dBm). It is shown that the PAPR reduction achieved by the proposed PR-DUN increases with the increase in $\delta^2$. This is because more power is allocated to the auxiliary signal to cancel the peaks.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{Figures/2.png}}
+\caption{PAPR reduction for different transmit power constraints $\delta^2$.}
+\label{fig2}
+\end{figure}
+
+Fig.~\ref{fig3} compares the PAPR reduction of the PR-DUN for different numbers of layers. We observe that increasing the number of layers in the PR-DUN results in a higher reduction in the PAPR.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{Figures/3.png}}
+\caption{PAPR reduction for different numbers of layers L.}
+\label{fig3}
+\end{figure}
+
+Fig.~\ref{fig4} depicts the impact of the number of reserved sub-carriers on the PAPR reduction performance. It is shown that more reserved sub-carriers leads to better PAPR reduction.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{Figures/4.png}}
+\caption{PAPR reduction for different numbers of reserved sub-carriers.}
+\label{fig4}
+\end{figure}
+
+In Fig.~\ref{fig5}, we compare our 10-layer PR-DUN model to the SCR \cite{b1} and ICF \cite{b14} algorithms, the SLM algorithm \cite{b11}, the PR-DUN (random), the RNN model \cite{b8}, the PRnet model \cite{b7}, and the optimal solution of the QCQP problem in \eqref{eq1}.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{Figures/5.png}}
+\caption{PAPR reduction performance of different algorithms.}
+\label{fig5}
+\end{figure}
+
+Fig.~\ref{fig6} depicts the BER performance of the considered techniques under different Eb/No or signal-to-noise ratio (SNR) values.
+
+\begin{figure}[htbp]
+\centerline{\includegraphics[width=\linewidth]{Figures/6.png}}
+\caption{BER performance of different algorithms.}
+\label{fig6}
+\end{figure}
+
+\section{Conclusion}
+In this letter, we proposed a deep unfolding model to reduce the PAPR while satisfying the power limitation. A few trainable parameters are embedded into the proposed model to determine the clipping threshold adaptively, and the parameters are optimized over a loss function of peak values, namely the PRR. We apply a power control algorithm to limit the power increment caused by the auxiliary signal. Simulation results show that our proposed solution achieves a larger PAPR reduction than related techniques while satisfying the power constraint and being less computationally complex.
+
+\begin{thebibliography}{00}
+
+\bibitem{b1} J. Tellado and J. M. Cioffi, “Peak power reduction for multi-carrier transmission,” in IEEE GLOBECOM’98, 1998, pp. 219–224.
+\bibitem{b2} H. Li, T. Jiang, and Y. Zhou, “An improved tone reservation scheme with fast convergence for PAPR reduction in OFDM systems,” IEEE Trans. Broadcast., vol. 57, no. 4, pp. 902–906, 2011.
+\bibitem{b3} P. Yu and S. Jin, “A low complexity tone reservation scheme based on time-domain kernel matrix for PAPR reduction in OFDM systems,” IEEE Trans. Broadcast., vol. 61, no. 4, pp. 710–716, 2015.
+\bibitem{b4} J. Wang, X. Lv, and W. Wu, “Scr-based tone reservation schemes with fast convergence for PAPR reduction in OFDM system,” IEEE Wireless Commun. Lett., vol. 8, no. 2, pp. 624–627, 2019.
+\bibitem{b5} Y. Wang, W. Chen, and C. Tellambura, “Genetic algorithm based nearly optimal peak reduction tone set selection for adaptive amplitude clipping PAPR reduction,” IEEE Trans. Broadcast., vol. 58, no. 3, pp. 462–471, 2012.
+\bibitem{b6} I. Sohn and S. C. Kim, “Neural network based simplified clipping and filtering technique for PAPR reduction of OFDM signals,” IEEE Commun. Lett., vol. 19, no. 8, pp. 1438–1441, 2015.
+\bibitem{b7} M. Kim, W. Lee, and D.-H. Cho, “A novel PAPR reduction scheme for OFDM system based on deep learning,” IEEE Commun. Lett., vol. 22, no. 3, pp. 510–513, 2018.
+\bibitem{b8} Z. Liu, X. Hu, K. Han, S. Zhang, L. Sun, L. Xu, W. Wang, and F. M. Ghannouchi, “Low-complexity PAPR reduction method for OFDM systems based on real-valued neural networks,” IEEE Wireless Commun. Lett., vol. 9, no. 11, pp. 1840–1844, 2020.
+\bibitem{b9} H. Li, J. Wei, and N. Jin, “Low-complexity tone reservation scheme using pre-generated peak-canceling signals,” IEEE Commun. Lett., vol. 23, no. 9, pp. 1586–1589, 2019.
+\bibitem{b10} B. Wang, Q. Si, and M. Jin, “A novel tone reservation scheme based on deep learning for PAPR reduction in OFDM systems,” IEEE Commun. Lett., vol. 24, no. 6, pp. 1271–1274, 2020.
+\bibitem{b11} L. Yang, K. K. Soo, Y. M. Siu, and S. Q. Li, “A low complexity selected mapping scheme by use of time domain sequence superposition technique for PAPR reduction in OFDM system,” IEEE Trans. Broadcast., vol. 54, no. 4, pp. 821–824, 2008.
+\bibitem{b12} S. Kwon and N. B. Shroff, “Analysis of shortest path routing for large multi-hop wireless networks,” IEEE/ACM Trans. Netw., vol. 17, no. 3, pp. 857–869, 2009.
+\bibitem{b13} A. Krizhevsky, “Learning multiple layers of features from tiny images,” Tech. Rep., 2009.
+\bibitem{b14} A. J., “Peak-to-average power reduction for OFDM by repeated clipping and frequency domain filtering,” Electronics Letters, vol. 38, no. 5, pp. 246–247, 2002.
+
+\end{thebibliography}
+
+\end{document}

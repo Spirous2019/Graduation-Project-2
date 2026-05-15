@@ -1,0 +1,427 @@
+ 
+ 
+ 
+Abstract—Orthogonal 
+Frequency 
+Division 
+Multiplexing 
+(OFDM) technique has been widely adopted in many wireless 
+communication systems due to its high data-rate transmission 
+ability and robustness to the multipath fading channel. One of the 
+major disadvantages of OFDM technique is the high PAPR in the 
+time domain signal. The larger peak-to-average power ratio 
+(PAPR) would cause the fatal degradation of BER performance 
+and undesirable spectrum regrowth. One of the promising PAPR 
+reduction methods is the Selective Mapping method (SLM) which 
+can achieve better PAPR performance without signal distortion. 
+In this paper, a new effective PAPR reduction technique using 
+SLM based on Genetic Algorithm (GA) is proposed. GA is applied 
+to SLM-OFDM system for searching the optimum phase rotation 
+factors and reducing computational burden. The simulation 
+results show that the proposed GA based SLM-OFDM system 
+provides better PAPR reduction compared to conventional SLM-
+OFDM system. 
+ 
+Keywords— Orthogonal Frequency Division Multiplexing 
+(OFDM), Peak-to-Average  Power Ratio (PAPR), Selected  mapping  
+(SLM), Genetic  Algorithm  (GA).  
+I. INTRODUCTION 
+OFDM  has  many  well  known  advantages  such  as robustness  
+against  frequency  selective  fading  or  narrowband 
+interference,  high  bandwidth  efficiency,  and  efficient 
+implementation [1]. Recently, it is widely used in many digital 
+communication systems such us Digital Television (DTV), 
+Digital Audio Broadcasting (DAB), Digital Subscriber Line 
+(DSL) broadband internet access, standards for Wireless Local 
+Area Networks (WLANs), standards for Wireless Metropolitan 
+Area Networks (WMANs), and 4G mobile communications 
+[2],[3]. The principle of OFDM is to divide a high rate 
+information bitstream into several parallel low rate data 
+substreams and use these substreams to modulate a number of 
+orthogonal subcarriers by Fourier transform techniques. 
+However, one drawback of OFDM is that the transmitted signal 
+has a high PAPR when the subcarriers add up coherently. A 
+high PAPR not only degrades efﬁciency of a linear power 
+ampliﬁer but also limits the application of OFDM transmission 
+systems. Therefore, PAPR reduction in OFDM systems is an 
+active area of research and has widely attracted the attention of 
+researchers [2] [4]. 
+In order to reduce the PAPR effectively, various techniques have 
+been proposed such as clipping [5], coding [6], Tone Reservation 
+(TR) [7], Partial Transmit Sequence (PTS) [8] and Selective 
+Mapping (SLM) [9]. Conventional SLM techniques generate a 
+ 
+ 
+number of sequences by altering the phase information from a 
+sequence that consists of a fixed number of statistically 
+independent elements, and the sequence with the lowest PAPR 
+is chosen. Genetic algorithms (GA) [10] [11] (a type of 
+evolutionary computing), are search techniques based on 
+probabilities that reflect natural genetics. These algorithms are 
+widely used to search for a global optimum in combinatorial 
+problems due to their simplicity. In this paper, we present a new 
+SLM-OFDM technique for improved PAPR reduction that have 
+low complexity due to local search using a GA. 
+The paper is structured as follows: Section II brieﬂy shows the 
+OFDM signal model and the PAPR problem. In section III, the 
+conventional SLM-OFDM is described. GA based SLM-
+OFDM is proposed in section IV. Then, the simulation results 
+are presented in section V. Finally, conclusions are drawn in 
+section VI. 
+II. THE OFDM SIGNAL MODEL AND PAPR PROBLEM 
+       The OFDM signal is the sum of 𝑁 independent signals 
+modulated onto sub-channels of equal bandwidth, which can be 
+efﬁciently implemented by an Inverse Fast Fourier Transform 
+(IFFT) operation, as illustrated in Figure 1.  
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Fig 1: The IFFT implementation of an OFDM symbol. 
+Let 𝑋= [𝑋(0), 𝑋(1), … , 𝑋(𝑁−1)]  denotes an input symbol 
+sequence including 𝑁𝑃 equally spaced pilot symbols in the 
+frequency domain, where 𝑋(𝑘), 0 ≤𝑘≤𝑁−1 is the complex 
+data transmitted at the 𝑘𝑡ℎ subcarrier, and 𝑁 the number of 
+subcar- riers of the OFDM system. The time-domain signal 
+vector 𝑥= [𝑥(0), 𝑥(1), … , 𝑥(𝑁−1)]   of the OFDM system is 
+obtained by performing the 𝑁-point inverse fast Fourier 
+transform (IFFT) of 𝑋, and the 𝑁𝑡ℎ element of 𝑥 is given as: 
+A new SLM technique based on Genetic Algorithms 
+for PAPR reduction in OFDM systems 
+• 
+• 
+• 
+ 
+X (0) 
+ 
+X (1) 
+ 
+X (k) 
+ 
+ 
+ 
+ 
+X (N-1) 
+• 
+• 
+• 
+ 
+x[0] 
+ 
+x[1] 
+ 
+ 
+x[n] 
+ 
+ 
+ 
+x[N-1] 
+IFFT 
+Tarik Hadj Ali and A. Hamza 
+LISIC Laboratory, FEI, USTHB, Algeria 
+hadjtbm@yahoo.fr
+INTERNATIONAL JOURNAL OF COMMUNICATIONS
+Volume 10, 2016
+ISSN: 1998-4480
+91
+
+ 
+ 
+ 
+𝑥(𝑛) = 1
+𝑁∑𝑋(𝑘)𝑒𝑗2𝜋𝑘𝑛
+𝑁 ,      0 ≤𝑛≤𝑁−1
+𝑁−1
+𝑘=0
+ 
+(1) 
+ 
+The PAPR of the transmitted OFDM signal vector x in (1) can 
+be deﬁned as: 
+𝑃𝐴𝑃𝑅(𝑥) = 𝑚𝑎𝑥0≤𝑛≤𝑁−1|𝑥(𝑛)|2
+𝐸{|𝑥(𝑛)|2}
+ 
+(2) 
+Complementary Cumulative Distribution Function (CCDF) is 
+one of the most frequently used performance measure for PAPR 
+reduction techniques. It calculates the probability that the PAPR 
+of a data block exceeds a given threshold 𝑃𝐴𝑃𝑅0 and be 
+computed 
+by 
+Monte 
+Carlo 
+Simulation 
+[12]. 
+The 
+Complementary Cumulative Distribution Function (CCDF) of 
+the PAPR of 𝑁 symbols of a data block with Nyquist rate 
+sampling is deﬁned as: 
+𝑃𝑟(𝑃𝐴𝑃𝑅≥𝑃𝐴𝑃𝑅0) = 1 −𝑃𝑟(𝑃𝐴𝑃𝑅≤𝑃𝐴𝑃𝑅0) 
+= 1 −(1 −𝑒𝑃𝐴𝑃𝑅0)𝑁 
+(3) 
+III. SELECTIVE MAPPING TECHNIQUE (SLM)  
+  The block diagram of SLM technique is shown in Figure 2. 
+ 
+ 
+Fig 2: Functional block diagram of the SLM technique. 
+In this approach, firstly 𝑀 statistically independent input data 
+sequences 𝑋𝑚 which represent the same information are 
+generated, and then each sequence are processed by 𝑀 parallel 
+𝑁-point complex IFFT to generate 𝑀 different time-domain 
+OFDM symbols 𝑥𝑚 . The OFDM  symbol with the smallest 
+PAPR is selected for transmission [13], [14]. 
+The key point of SLM method lies in how to generate multiple 
+distinct time-domain OFDM symbols when the input data for 
+transmission is the same. For this purpose, 𝑀 pseudo-random 
+phase rotation sequences 𝜓𝑚 are generated. 
+ 
+𝜓𝑚= [𝜓𝑚,0    𝜓𝑚,1 …   𝜓𝑚,𝑁−1]  𝑇 
+(4) 
+With  𝑚= 1,2, … . , 𝑀 , 𝜓𝑚,𝑘= 𝑒𝑗𝜑𝑚,𝑘   and 𝜑𝑚,𝑘 is uniformly 
+distributed in [0, 2𝜋] and 0 ≤𝑘≤𝑁−1 . This process can be 
+seen as performing a dot product operation on the input tones 
+𝑋= [𝑋(0), 𝑋(1), … , 𝑋(𝑁−1)]  with rotation factors  𝜓𝑚. 
+ 
+𝑋𝑚= 𝑋. 𝜓𝑚,      𝑚= 1,2, … . , 𝑀    
+(5) 
+ 
+Then, the time-domain OFDM symbols 𝑥𝑚 can be written as: 
+ 
+𝑥𝑚= 𝐼𝐹𝐹𝑇{𝑋𝑚} = 𝐼𝐹𝐹𝑇{𝑋. 𝜓𝑚}    
+(6) 
+ 
+In practice, all the elements of the phase sequence 𝜓1  are set to 
+1 to make this branch sequence as the original OFDM symbol. 
+This approach is applicable with all types of modulation and 
+any number of subcarriers. The amount of PAPR reduction for 
+SLM depends on the number of phase sequences 𝑀 and the 
+design of the phase sequences. 
+IV. PROPOSED GA BASED SLM-OFDM SYSTEM 
+This  section  investigates  how  GA  can  be  used  for  phase 
+optimization  of  SLM-OFDM  system. In  order  to  solve  the  
+optimization  problem  of this system  and  acquiring  more  
+PAPR  reduction,  the  proposed technique  uses  GA  as  the  
+selection  mechanism  of  phase rotation  factors  for  SLM-
+OFDM  system.  GA,  which  is  a search  heuristic  algorithm  
+based  on  the  process  of  natural evolution, can find a good 
+solution for optimization problems by evolving the population 
+of solutions with genetic operators such as selection, mutation 
+and crossover [15]. The  block  diagram  of  the  proposed  GA  
+based  SLM- OFDM system is shown in Figure 3.  
+ 
+ 
+ 
+Fig 3: Functional block diagram of the proposed  GA  based  SLM- 
+OFDM technique. 
+ 
+In order to employ the GA method  to  find  the  optimum  phase  
+factors  that  minimize  the PAPR  in  the  SLM-OFDM  system,  
+the  following optimization problem is required to be solved: 
+ 
+𝜓𝑜𝑝𝑡= 𝑎𝑟𝑔𝑚𝑖𝑛𝜓{𝑚𝑎𝑥0≤𝑛≤𝑁−1|𝑥𝑚(𝑛)|2
+𝐸{|𝑥𝑚(𝑛)|2}
+} 
+ 
+(7) 
+Where 𝑚= 1,2, … . , 𝑀 and 𝜓𝑜𝑝𝑡  is  the  optimum  phase  
+rotation  factors. 
+The selection  mechanism of  GA based SLM-OFDM is 
+described as follows: 
+ 
+INTERNATIONAL JOURNAL OF COMMUNICATIONS
+Volume 10, 2016
+ISSN: 1998-4480
+92
+
+ 
+ 
+Proposed Algorithm: GA-SLM-OFDM method 
+ 
+1. Select  the  first  population  size,  the  mutation 
+probability,  crossover  probability,  and  initial 
+population  randomly.  Each  gene  represents  a  vector 
+of phase factor candidate. 
+2. Calculate  the  PAPR  value  for  each  gene  by 
+multiplying  𝑋  with  the  set  of  phase  rotation  factors 
+as given by (6). 
+3. Select genes with smallest PAPR value (called set of 
+parents). 
+4. Crossover  and  mutate  all  genes  to  generate  a  new 
+genes (offsprings). 
+5. Go  back  to  step  2  using  the  new  generated 
+population.  The  processing  is  repeatedly  executed 
+until  termination  (maximum  number  of  generation). 
+The vector of phase rotation  factors  with the lowest 
+PAPR  are  used  for  the  transmitted  data  and  sent  
+to the receiver. 
+6. End 
+ 
+V. SIMULATION RESULTS 
+    Using  MATLAB  software  simulation  analysis  of  PAPR 
+reduction  is  performed  by averaging over 104  randomly 
+OFDM symbols with  QPSK  modulation. The analysis of 
+PAPR performance for original OFDM,  the  conventional 
+SLM-OFDM and GA  based  SLM-OFDM systems is presented 
+in terms of CCDF. The  simulation  parameters  used  through  
+the comparative study are stated in Table I.  
+ 
+Table I: Simulation parameters. 
+ 
+System parameters 
+Value 
+Number of subcarriers 
+Modulation type 
+Phase rotations 
+Size of initial population 
+Number of iteration   
+Mutation probability  
+Crossover probability 
+128 
+QPSK 
+-1, 1, j, -j 
+150 
+10 
+0.3 
+0.7 
+ 
+ 
+Fig 4: CCDF of the OFDM for SLM technique with different number 
+of phase sequences 𝑀 and 𝑁= 128 subcarrier. 
+As shown in Figure 4, it can  be  observed  that  the  
+conventional  SLM  method  displays  a  better  PAPR  reduction 
+performance than the original OFDM signal which is free of 
+any PAPR reduction scheme. The  probability  of  high  PAPR  
+is  significantly  decreased.  Increasing the number of phase 
+sequences 𝑀  leads  to  the improvement of PAPR reduction 
+performance. If the probability is set to 10-2 and then the CCDF  
+curves  with  different  𝑀  values  are  compared.  The  PAPR  
+value  of  case  𝑀= 2  is about  1.5 dB  smaller  than  the  
+unmodified  one  𝑀= 1.  Under  the  same  condition,  the  
+PAPR value of case 𝑀= 16 is about 3.2 dB smaller than the 
+original one 𝑀= 1. However,  from the comparison  of  the  
+curve  𝑀=8  and  𝑀=16,  we  learned  that  the  performance  
+difference between these two cases is about 0.5 dB. This proves 
+that we will not be able to achieve a linear growth of PAPR 
+reduction performance with further increase the value of 𝑀 
+(like 𝑀≥8),  the  PAPR  reduction  performance  of  OFDM  
+signal  will  not  be  considerably improved and it will also add 
+more computational complexity. 
+ 
+ 
+Fig 5: CCDF of the original OFDM, GA based  OFDM-SLM and 
+OFDM-SLM techniques with (𝑀= 8,16). 
+The PAPR Reduction performance of proposed GA based 
+SLM-OFDM  system  is  compared  with  conventional  SLM- 
+OFDM  system  in  Fig 5 . The simulation  depicts  that  GA  
+based SLM-OFDM  is  more  effective  in  reducing  the  PAPR  
+than SLM-OFDM. At  CCDF  probability of  10-2, GA  based 
+SLM-OFDM attains  5.8 dB  PAPR,  while  the  SLM-OFDM 
+with ( 𝑀= 16 ) attains 6.7 dB with reduction gain of 0.9 dB. 
+We can notice also that the PAPR reduction gain of the GA  
+based SLM-OFDM compared with original OFDM is about 4 
+dB. 
+From Figure 6, it can be seen that the proposed GA based  
+OFDM-SLM algorithm undeniably improves the  performance 
+of OFDM system,  moreover, with the increasing of population 
+size 𝑃, the improvement of PAPR reduction performance 
+becomes better and better. Assume that we fix the probability 
+of PAPR at 10-2, and compare the CCDF curve with different 𝑃 
+values. Form the Figure 6, we notice that the CCDF  curve  has  
+nearly  0.2 dB  improvement  when  𝑃  =  300 compared  to 𝑃  
+=  150.  When  𝑃  = 600,  the  10-2  PAPR  is  about  5.4 dB,  so  
+INTERNATIONAL JOURNAL OF COMMUNICATIONS
+Volume 10, 2016
+ISSN: 1998-4480
+93
+
+ 
+ 
+an  optimization  of  more than 0.35 dB is achieved compared 
+to 𝑃  =  150. 
+ 
+ 
+Fig 6: CCDF of the GA based  OFDM-SLM technique with different 
+population size 𝑃. 
+ 
+ 
+Fig 7: CCDF of the GA based  OFDM-SLM technique with different 
+iteration values . 
+Figure 7  shows  the  effect  of  the  iterations  on  the  PAPR  
+performance. It can be seen that the  PAPR  is reduced  clearly  
+by  increasing the number of iterations.  
+VI. CONCLUSION  
+In  this  paper,  an  efficient  technique  based  on  GA  
+is proposed  to  achieve  PAPR  reduction.  The  PAPR  
+reduction performance of the proposed SLM-OFDM system 
+using GA for  optimum  phase  rotation  factors  searching  was  
+compared with  the original  OFDM and conventienal SLM-
+OFDM systems. According  to  the  simulation  results,  the  
+proposed  GA  based SLM-OFDM  outperforms  the  compared  
+systems with  low computational complexity.   
+ 
+REFERENCES   
+[1] R.  V.  Nee  &  R.  Prasad,  “OFDM  wireless  multimedia 
+communications,” Artech House, 2000.    
+[2] S. H.   Han  &  J. H.   Lee,  “An   overview  of   peak-to-average   power  
+ratio      reduction      techniques    for      multicarrier    transmission,”  
+IEEE Wireless  Communications  Magazine, Vo.  12,  No.  2,  pp.56-65,  
+Apr. 2005.    
+[3] IEEE 802.16d, Air interface for ﬁxed broadband wireless access systems, 
+IEEE 802.16, May 2004. 
+[4] T. Jiang and Y. Y. Wu,”An Overview: Peak-to-Average Power Ratio 
+Reduction Techniques for OFDM Signals,” IEEE Trans. Broadcast., vol. 
+54, no. 2, pp. 257–268, June 2008.  
+[5] S. S. H. Masoumian, M. Shabani, and B. M. Tazehkand, “A New PAPR  
+Reduction Method Based on Clipping Technique Using Compressive 
+Sensing,” 6th International Symposium on Telecommunications, pp.238- 
+242,2012. 
+[6] Y. J. Shi, D. Z. He, W. Huang, Y. Xu, Y. F. Guan, and J. Sun, 
+“Constellation Shifting Based on QAM with Gray Coding for PAPR 
+Reduction of OFDM Systems,” IEEE International Symposium on 
+Broadband Multimedia Systems and Broadcasting, pp.1-3, 2013. 
+[7] J. C. Chen and C. P. Li, “Tone reservation using near-optimal peak 
+reduction tone set selection algorithm for PAPR reduction in OFDM 
+systems,” IEEE Signal Process. Lett., vol. 17, no. 11, pp. 933-936, Nov. 
+2010. 
+[8] 
+S. Pyla, K. P. Raju, and N. Balasubrahmanyam, “PAPR Reduction in OFDM 
+Systems Using PTS and Various Modulation Scheme,” 15th International 
+Conference on Advanced Computing Technologies, pp.1-6, 2013. 
+[9] J. W. Ji and G. L. Ren, “A New Modified SLM Scheme for Wireless 
+OFDM Systems without Side Information,” IEEE Signal Processing 
+Letters, vol.20, no.11, pp.1090-1093, 2013. 
+[10] M. Srinivas and L.M. Patnaik, “Genetic algorithms: A survey,” IEEE 
+Computer, vol. 27, no. 6, pp. 17–26, June 1994. 
+[11] L. Davis, Handbook of Genetic Algorithms, Van Nostrand Reinhold, 
+1991. 
+[12] S. Muller and J. Huber, “OFDM with reduced peak-to-average power 
+ratio by optimum combination of partial transmit sequences,” Electronics 
+Letters, vol. 33, no. 5, pp. 368–369, 1997. 
+[13] R. W. Bauml, R. F. H. Fisher and J. B. Huber, “Reducing the Peak-to-
+Average Power Ratio of Multicarrier Modulation by Selected Mapping”, 
+Electronics Letters, vol. 32, no. 22, pp. 20562057, Oct. 1996 
+[14] S. J. Heo, H. S. Noh, J. S. No and D. J. Shin “A Modiﬁed SLM Scheme 
+With Low Complexity for PAPR Reduction of OFDM Systems”, IEEE 
+Trans. on Broadcasting, vol. 53, no. 4, pp. 802- 808, Dec. 2007. 
+[15] Y. Wang, W. Chen, and C. Tellambura, “Genetic algorithm based nearly 
+optimal peak reduction tone set selection for adaptive amplitude clipping 
+PAPR reduction,” IEEE Trans. on Broadcast., vol. 58, no. 3, pp. 462- 471, 
+Sept. 2012. 
+ 
+ 
+ 
+ 
+INTERNATIONAL JOURNAL OF COMMUNICATIONS
+Volume 10, 2016
+ISSN: 1998-4480
+94

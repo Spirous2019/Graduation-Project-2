@@ -1,0 +1,570 @@
+1089-7798 (c) 2017 IEEE. Personal use is permitted, but republication/redistribution requires IEEE permission. See http://www.ieee.org/publications_standards/publications/rights/index.html for more information.
+This article has been accepted for publication in a future issue of this journal, but has not been fully edited. Content may change prior to final publication. Citation information: DOI 10.1109/LCOMM.2017.2787646, IEEE
+Communications Letters
+1
+A Novel PAPR Reduction Scheme for OFDM System
+based on Deep Learning
+Minhoe Kim, Woongsup Lee, Member, IEEE, and Dong-Ho Cho, Senior member, IEEE
+Abstract—High peak-to-average power ratio (PAPR) has been
+one of the major drawbacks of orthogonal frequency division
+multiplexing (OFDM) systems. In this paper, we propose a novel
+PAPR reduction scheme, known as PAPR reducing network (PRNet),
+based on the autoencoder architecture of deep learning. In the
+PRNet, the constellation mapping and demapping of symbols on
+each subcarrier is determined adaptively through a deep learning
+technique such that both the bit error rate (BER) and the PAPR
+of the OFDM system are jointly minimized. We used simulations to
+show that the proposed scheme outperforms conventional schemes
+in terms of BER and PAPR.
+Index Terms—Orthogonal frequency division multiplexing, au-
+toencoder, deep learning, peak-to-average power ratio.
+I. INTRODUCTION
+Orthogonal frequency division multiplexing (OFDM) has been
+used in many wireless communication systems including the IEEE
+802.11, Long-Term Evolution (LTE) and LTE Advanced systems,
+due to its robustness in multipath propagation environments and
+the relatively low complexity transceiver design. However, it
+suffers from high peak-to-average power ratio (PAPR) which
+possibly results in the distortion of transmitted signal due to the
+nonlinearity of power ampliﬁers. Consequently, the reduction of
+PAPR of OFDM system is one of the most important research
+topics in OFDM and has been the subject of extensive investiga-
+tion by many researchers [1]–[4].
+One of most well known schemes for reducing the PAPR
+in an OFDM system is the clipping scheme [1] in which the
+original signal is distorted deliberately such that the distribution
+of the transmitted signal is within the proper range of the
+power ampliﬁer. Although the clipping scheme can reduce the
+PAPR of an OFDM system, the bit error rate (BER) of the
+system is degraded due to the distortion of the signal, which
+is the drawback of the clipping scheme. Other notable schemes
+for PAPR reduction are signal scrambling techniques, such as
+partial transmission sequence (PTS) and selective mapping (SLM)
+[2], [3]. However, in the signal scrambling scheme, the phase
+factor to generate a scrambled signal is needed at the receiver
+in order to reconstruct the transmitted information properly. If
+this side information is inaccurate, the performance is greatly
+degraded. Moreover, the signal scrambling scheme requires huge
+computational complexity to ﬁnd the phase factor that generates
+an optimal scrambled sequence. In addition, a nonlinear com-
+panding transform scheme for reducing PAPR was proposed in
+This work was supported by Institute for Information & communications
+Technology Promotion (IITP) grant funded by the Korea government (MSIT)
+(No. 2014-0-00282, Development of 5G Mobile Communication Technologies
+for Hyper-connected smart services)
+M. Kim and D.H. Cho are with the school of Electrical Engineering, Korea
+Advanced Institute of Science and Technology. W. Lee is with the Department
+of Information and Communication Engineering, Institute of Marine Industry,
+Gyeongsang National University, Republic of Korea.
+[4]; however, the BER of this system was degraded due to the
+signal distortion, just as it is in the clipping scheme.
+In recent years, deep learning which is based on an architecture
+of multiple layers of perceptron (MLP) connected between input
+and output layers in a way that mimics the neurons in a human
+brain, has provided a signiﬁcant improvement in performance
+compared with conventional hand-crafted schemes in many ﬁelds,
+e.g., computer vision and natural language processing. Far from
+being merely a tool for cognitive tasks such as image recognition,
+deep learning shows potential for applications in communication
+systems, offering an improvement over traditional schemes. For
+instance, various deep learning techniques were shown to have
+better performances than conventional schemes in the tasks of
+channel encoding and decoding [5]. Moreover, radio modulation
+recognition using convolution neural networks was investigated
+in [6]. Accordingly, the deep learning technique can be adopted
+to solve the problem of high PAPR in OFDM systems. In [7] and
+[8], the authors considered an artiﬁcial neural network (ANN)
+to reduce the complexity in solving PAPR reduction problem;
+however, the main focus of these studies was to reduce the
+complexity of active constellation extension (ACE) scheme which
+is one of most popular PAPR reduction scheme based on clipping,
+thus they cannot outperform conventional schemes. Moreover,
+these studies possibly hinder the full potential of deep learning
+because only shallow neural network (2 layers with 2 nodes)
+was considered which lacks the use of the state-of-the-art deep
+learning techniques, e.g., Batch normalization.
+Herein, we investigate the reduction of PAPR by utilizing the
+speciﬁc type of DNN, i.e., an autoencoder, which is usually
+used for denoising corrupted data [9]. In our proposed scheme,
+constellation mapping and demapping of symbols1 on each sub-
+carrier in an OFDM system are learned through the training of
+DNN such that the transmit signal sequence has a low PAPR,
+while minimizing the degradation of the BER. Moreover, once
+trained, our proposed scheme can be performed with negligible
+overhead such that the real-time operation is possible. The main
+contributions of this paper are summarized in two folds as follows.
+• We propose a novel PAPR reduction scheme, namely PRNet,
+in an OFDM system based on deep autoencoder architecture.
+In our proposed scheme, constellation mapping and demap-
+ping of symbols on each subcarrier in the OFDM system
+are found through a deep learning technique. To the best
+of our knowledge, this is the ﬁrst attempt to apply a deep
+autoencoder for the reduction of PAPR in an OFDM system.
+• We evaluate the performance of the proposed scheme using
+computer simulations. We conﬁrm that PRNet signiﬁcantly
+reduces the PAPR of an OFDM system (i.e., the probability
+1Note that the constellation shaping problem to minimize PAPR is a multivariate
+non-convex problem that is NP-hard [10], hence it is hard to solve the problem
+using explicit mathematical formulation.
+1089-7798 (c) 2017 IEEE. Personal use is permitted, but republication/redistribution requires IEEE permission. See http://www.ieee.org/publications_standards/publications/rights/index.html for more information.
+This article has been accepted for publication in a future issue of this journal, but has not been fully edited. Content may change prior to final publication. Citation information: DOI 10.1109/LCOMM.2017.2787646, IEEE
+Communications Letters
+2
+෬෬෬
+6HULDOWR
+SDUDOOHO
+,QSXWGDWD
+VHTXHQFH
+(QFRGHU
+FRQVWHOODWLRQ
+PDSSHU
+,))7
+FKDQQHO
+෬෬෬
+෬෬෬
+'$&
+[
+IF
+$'&
+2XWSXWGDWD
+VHTXHQFH
+))7
+'HFRGHU
+FRQVWHOODWLRQ
+GHPDSSHU
+෬෬෬
+3DUHOOHO
+WRVHULDO
+[
+IF
+෬෬෬
+෬෬෬
+෬෬෬
+෬෬෬
+෬෬
+෬෬
+)&
+5H/8
+%DWFKQRUP
+)&
+5H/8
+%DWFKQRUP
+)&
+5H/8
+%DWFKQRUP
+)&
+5H/8
+%DWFKQRUP
+)&
+%DWFKQRUP
+5H/8
+)&
+%DWFKQRUP
+5H/8
+)&
+%DWFKQRUP
+5H/8
+)&
+%DWFKQRUP
+5H/8
+'11EDVHGHQFRGHU
+'11EDVHGGHFRGHU
+U
+Q
+෬෬෬
+)&
+5H/8
+%DWFKQRUP
+)&
+%DWFKQRUP
+5H/8
+Fig. 1. Structure of proposed PRNet with DNN encoder and DNN decoder.
+that the PAPR is higher than 3 dB is less than 0.1%), while
+retaining the BER.
+The remainder of this paper is organized as follows. In Section
+II, we describe the system model and the principles behind the
+autoencoder. Our proposed scheme is then introduced in Section
+III. Its performance is assessed in Section IV, and in Section V
+we provide our conclusions.
+II. SYSTEM MODEL AND AUTOENCODER
+A. System Model
+We consider an OFDM system in which bandwidth is divided
+into N orthogonal subcarriers where an encoded symbol is
+transmitted on each subcarrier. We assume an independent and
+identically distributed (i.i.d.) input data sequence which consists
+of symbol rk that refers to M-bit data, where k is the index of
+the symbol and r is the vector of rk. In our system model, the
+input data sequence is mapped into I-Q constellations, using a
+constellation mapper that we denote as an encoder, f(r). The
+encoded symbol of the k-th subcarrier, Xk, can be described
+as a symbol mapped from the k-th information symbol, i.e.,
+f(rk) = Xk. Then, x[n], which is time domain signal that
+becomes the time domain input for the signal ampliﬁer at the
+RF chain, can be obtained by feeding Xk into an inverse discrete
+Fourier transform as follows:
+x[n] =
+N−1
+X
+k=0
+Xkej2πnk/N,
+(1)
+where 0 ≤n ≤N −1.
+Then, the PAPR of the OFDM sequence x[n], which we denote
+as PAPR{x[n]}, can be deﬁned as follows:
+PAPR{x[n]} =
+max
+0≤n≤N−1 x[n]2
+E [|x[n]|2]
+.
+(2)
+Here, the denominator is the average power of x[n] over 0 ≤n ≤
+N −1.
+It is worth noting that in an OFDM system without PAPR
+reduction, the distribution of the real part of the time domain
+signal, R{x[n]}, and that of the imaginary part, I{x[n]}, become
+Gaussian distribution as N is sufﬁciently large according to the
+central limit theorem, which results in a high PAPR [11].
+B. Autoencoder
+In this paper, we have used an autoencoder of deep learning,
+which is one of the most well-known generative models in deep
+learning [12]. Let x, f(x), and g(x) be the input, encoder, and
+decoder of the autoencoder, respectively. Then, the autoencoder
+is trained to generate output g(f(x)) such that the loss func-
+tion, L(x, g(f(x))) is minimized. For example, in a denoising
+autoencoder (DAE), the reconstruction of the original input, x,
+from a corrupted copy of input, ˜x = x + ϵ, where ϵ is random
+noise, is the main objective [12]. Then, the loss function becomes
+||x −g(f(˜x))||2 where || · ||2 denotes the L2 norm. Note that in
+this case, the autoencoder is trained to have the capability of
+reconstructing the original signal x from the corrupted one. For
+the training of the autoencoder, the stochastic gradient descent
+(SGD) optimization method can be used in which the weights
+and biases of the autoencoder are updated as follows:
+θ+ := θ −α▽L(x, ˆx; θ).
+(3)
+Here, α is the learning rate that determines the step size of the
+update value and θ denotes parameters involved in building the
+DNN layers, which will be explained in the next section.
+III. PROPOSED SCHEME
+In this section, we ﬁrst describe the structure and operation of
+the proposed PRNet. We then discuss how PRNet can be trained
+to achieve our goal, i.e., reduction of PAPR without sacriﬁcing
+BER. The considered PRNet is depicted in Fig. 1.
+A. Structure and Operation of Proposed PRNet
+A simple encoder and decoder structure is considered for
+PRNet. More speciﬁcally, both the encoder and the decoder are
+composed of the identical sub-blocks (hidden layers) which are
+connected in tandem, cf. Fig. 1. Each sub-block is composed of
+fully connected layer (FC), batch normalization (Batchnorm), and
+rectiﬁer linear unit (ReLU), which are also connected together.
+In the FC, the matrix multiplication of the weights is applied, as
+the addition of biases is applied. Let xFC be the input of the m-th
+FC, then the output of the FC, yF C, becomes yF C = WmxFC +
+bm, where Wm and bm are the weights and bias for the m-th
+FC, respectively. In addition, we assume that each FC contains
+2048 hidden nodes.
+The output of FC is fed into the Batchnorm unit, which normal-
+izes the input of the ReLU unit such that the PRNet can be trained
+more efﬁciently [13]. The Batchnorm can be mathematically
+expressed as |yF C|norm = γ yF C−E[yF C]
+√
+V ar[yF C]+ν + β, where γ and β
+are a scaling and shift factor, respectively. Moreover, ν = 0.001 is
+a constant which prevents the division by zero. It should be noted
+that both γ and β are also learnable parameters whose values are
+found through training.
+Finally, the normalized value is fed into the activation function
+φ(·), which provides nonlinearity2 to the PRNet [14]. In our
+proposed scheme, the ReLU is used as the activation function
+2It should be noted that without nonlinear activation layer, the PRNet becomes a
+simple matrix computation, which is unable to deal with nonlinear characteristics.
+1089-7798 (c) 2017 IEEE. Personal use is permitted, but republication/redistribution requires IEEE permission. See http://www.ieee.org/publications_standards/publications/rights/index.html for more information.
+This article has been accepted for publication in a future issue of this journal, but has not been fully edited. Content may change prior to final publication. Citation information: DOI 10.1109/LCOMM.2017.2787646, IEEE
+Communications Letters
+3
+for PRNet such that the output becomes the same as the input if
+the input is greater than 0, and the output becomes 0, otherwise,
+i.e., the output of m-th ReLU becomes max(|yF C|norm, 0).
+In the PRNet, the input data is encoded to constellation plane
+using the encoder of PRNet, which is composed of Lf = 5
+sub-blocks. Accordingly, the output of encoder can be expressed
+mathematically as f(r) = φLf (|W f
+Lf φLf −1(· · · φ1(|W f
+1 r +
+bf
+1|norm) · · · ) + bf
+Lf |norm), where W f
+lf and bf
+lf are the weights
+and bias for the lf-th FC of the encoder, respectively. Then
+the encoded symbols pass through an IFFT operation, which
+generates the transmit signal. After the IFFT, the signal is trans-
+mitted through a wireless channel before arriving at the receiver.
+Finally, the received signal passes through an FFT operation and
+is decoded using the decoder of the PRNet. We assume that the
+decoder is composed of Lg = 5 sub-blocks like the encoder
+such that the output of the decoder, g(y), can be expressed
+as g(y) = φLg(|W g
+LgφLg−1(· · · φ1(|W g
+1 y + bg
+1|norm) · · · ) +
+bg
+Lg|norm) where y denotes the input of decoder and W g
+lg and
+bg
+lg are the weights and bias for the lg-th FC of the decoder,
+respectively.
+Accordingly, the reconstructed symbol at the receiver, ˆr, can
+be written as follows:
+ˆr = g ◦FFT ◦H ◦IFFT ◦f(r),
+(4)
+where H denotes the effects of the wireless channel such as
+multipath fading and thermal noise.
+B. Training of PRNet
+In our proposed scheme, the network is trained to reduce PAPR
+while preventing the deterioration in the BER. Accordingly, two
+distinct objectives must be taken into account. First, the PRNet
+needs to be able to reconstruct the transmitted signals from
+the received signals such that the BER of the system does not
+deteriorate. Second, the PRNet must also generate a transmission
+signal that shows a low PAPR. In the following, we explain the
+appropriate loss function of the PRNet to achieve the former and
+latter goal and also provide a solution for achieving both goals
+jointly.
+In order to achieve the former objective, the encoder of the
+PRNet is trained to ﬁnd the proper constellation mapping from
+the input data, rk, to the output, Xk, and the decoder of the PRNet
+must be able to decode the received signal. Then, the proper loss
+function to achieve this objective can be written as follows3:
+L1(r, ˆr) = ||r −g(FFT(H ◦IFFT(f(r; θf)) + ϵ); θg)||2, (5)
+where f(·; θf) and g(·; θg) are the parametric representation of
+the encoder and decoder, respectively, and ϵ is the noise at the
+receiver. We denote this as a parametric representation because the
+weight matrix, biases, and activation layers can be represented by
+simple matrix operations of hidden node parameters as explained
+in the previous subsection, i.e. θ = {W , b}. Through the training,
+θf and θg, i.e., the weight and bias of the autoencoder, which
+minimize the loss function, are found such that the constellation
+that is robust to a random channel H is attained by the encoder,
+3In our proposed scheme, we have used mean squared error (MSE) for the loss
+function, which is widely used for the autoencoder structure because our goal is
+to regenerate r from the noisy sample. The cross entropy which is also widely
+taken into account in DNN design is inappropriate in our scheme because the
+considered problem is not classiﬁcation problem and the label data is unavailable.
+0
+5
+10
+15
+20
+25
+30
+Eb/N0 [dB]
+10−4
+10−3
+10−2
+10−1
+100
+BER
+PRnet
+Clipping scheme
+PTS scheme
+Fig. 2. BER vs. SNR of conventional and proposed schemes.
+0
+2
+4
+6
+8
+10
+12
+14
+PAPR0 [dB]
+10−3
+10−2
+10−1
+100
+CCDF (PAPR<PAPR0)
+Original OFDM
+PRNet
+Clipping scheme
+PTS scheme
+Fig. 3. CCDF of PAPR for conventional and proposed schemes.
+and an efﬁcient way of decoding this constellation mapping is
+achieved by the decoder. On the other hand, the following loss
+function, L2(r), can be used to achieve the latter objective, i.e.,
+decrease of PAPR,
+L2(r) = PAPR{x[n]} = PAPR{IFFT(f(r; θf))}.
+(6)
+In our proposed scheme, the training is divided into two stages.
+In the ﬁrst stage of training, the proper corruption level, η =
+E[|ϵ|2]
+E[|r|2] which denotes the ratio of noise power and signal power,
+is determined by using the loss function L1. Then, in the second
+stage of training, the weights and biases of the autoencoder (θf
+and θg) are learned by considering the joint loss function, L(r, ˆr),
+which combines L1 and L2 such that both PAPR and BER, can
+be minimized. L(r, ˆr) can be expressed as follows:
+L(r, ˆr) = L1(r, ˆr) + λL2(r).
+(7)
+Here, λ denotes the weight parameter that determines which loss,
+i.e., L1 or L2, is dominant. For example, when the value of λ is
+small, the autoencoder is trained to improve the BER but to put
+less effort into reducing the PAPR.
+IV. PERFORMANCE EVALUATION
+In this section, we evaluate the performance of our proposed
+PRNet scheme. In particular, the BER and complementary cu-
+mulative distribution function (CCDF) of the PAPR, deﬁned
+as Prob{PAPR > PAPR0}, are examined. Moreover, the
+characteristics of the PRNet are also investigated. Our simulation
+codes can be found at [15].
+We consider an OFDM system with 64 subcarriers and 4-QAM
+modulation4. We also assume the Rayleigh fading channel for a
+4Although we have considered an OFDM system with a small number of
+subcarriers due to the problem of number of required training samples, the
+considered OFDM system is plausible because some wireless systems, e.g., the
+IEEE 802.11 a-g systems, use the small OFDM size.
+1089-7798 (c) 2017 IEEE. Personal use is permitted, but republication/redistribution requires IEEE permission. See http://www.ieee.org/publications_standards/publications/rights/index.html for more information.
+This article has been accepted for publication in a future issue of this journal, but has not been fully edited. Content may change prior to final publication. Citation information: DOI 10.1109/LCOMM.2017.2787646, IEEE
+Communications Letters
+4
+0
+5
+10
+15
+20
+25
+30
+Eb/N0
+10−4
+10−3
+10−2
+10−1
+BER
+Trained at η = 0dB
+Trained at η = -5dB
+Trained at η = -10dB
+trained at η = -15dB
+Trained at η = -20dB
+Trained at η = -25dB
+Trained at η = -30dB
+Fig. 4. BER of PRNet at different corruption levels.
+0.5
+1.0
+1.5
+2.0
+2.5
+3.0
+Average PAPR [dB]
+2 × 10−3
+3 × 10−3
+4 × 10−3
+6 × 10−3
+BER
+λ =  0.1
+λ =  0.05
+λ =  0.01
+λ =  0.001
+Fig. 5. BER vs. PAPR of PRNet by varying λ when SNR is 20dB.
+wireless channel, i.e., H. In the training of PRNet, total 500,000
+batches are used for training and the batch size that denotes the
+number of training samples used for updating a single step in the
+SGD algorithm, is set to 400, and the weight parameter, λ, is set to
+0.01. For comparison, we consider two well known conventional
+PAPR reduction schemes, which are the PTS algorithm and the
+clipping algorithm, where 4 sub-blocks with 4 possible phase
+factors are taken into account for the PTS algorithm. It should
+be noted that although the PRNet is based on deep learning
+which is known to have high computational burden, the com-
+putational overhead of the PRNet is rather small with complexity
+of O(L · K · M) where L is the number of hidden layers; it
+has an execution time of 480µs with parallel computation and
+2304µs without parallel computation, which is lower or similar
+compared to that of the PTS scheme or clipping schemes, whose
+execution times are 2890µs, and 1415µs, respectively. We have
+used GTX1080 for parallel computation and Intel i7-4770 for all
+other simulations. For the training stage, the average power of
+the noise, E[|ϵ|2], is ﬁxed5. Finally, we used a PRNet trained at
+η = −15 dB for the performance evaluation.
+In Fig. 2, the BER of the PRNet is compared with that of
+conventional schemes. The results indicate that our proposed
+scheme has a lower BER than conventional PAPR reduction
+schemes over the whole range of values shown.
+The CCDF of the PAPR of conventional schemes and of the
+PRNet are shown in Fig. 3 which are evaluated with 50,000
+5As can be seen from the loss function used in our PRNet, the performance
+of our proposed scheme depends on the amount of noise applied to corrupt the
+original signal in training. If the amount of noise is too small, the decoder learns
+only the small region near the original symbol location in the constellation plane,
+whereas if the amount of noise is too large, the decoder is confused by the
+overlapping region of the received signal distribution in the constellation plane.
+In fact, the appropriate level of noise depends on the modulation level, because
+the average distance between symbols in a constellation plane depends on the
+modulation level.
+random OFDM input data sequences. From these results, we
+ﬁnd that the PAPR of the PRNet is much lower than that
+of conventional schemes. We also conclude that our proposed
+scheme outperforms conventional PAPR reduction schemes in
+terms of both BER and PAPR.
+In Fig. 4, the BER of the PRNet at different corruption levels,
+η, is shown. As seen from these results, training the PRNet at η
+= −15 dB provides lower BER than other cases over the whole
+range of SNR, which justiﬁes our choice of corruption level.
+Finally, the average BER and PAPR of the PRNet obtained
+by varying λ when the SNR is 20 dB, are shown in Fig. 5. As
+expected, the values of BER and PAPR vary according to λ, such
+that the performance of the PRNet can be adjusted according to
+the importance of the two metrics.
+V. CONCLUSIONS AND FUTURE WORKS
+In this paper, a novel deep learning-based PAPR reduction
+scheme for an OFDM system, namely PRNet, was proposed.
+Using the autoencoder of deep learning, our proposed scheme is
+capable of reducing the PAPR while maintaining BER. Through
+simulations, we showed that our proposed scheme signiﬁcantly
+outperforms conventional schemes in view of both PAPR and
+BER. An interesting extension of this work lies in the consid-
+eration of superposition coding for multicarrier non-orthogonal
+multiple access (NOMA) systems. It would be also interesting
+to develop faster training method for larger OFDM systems with
+more subcarriers and higher modulation order.
+REFERENCES
+[1] H. Ochiai and H. Imai, “Performance analysis of deliberately clipped OFDM
+signals,” IEEE Trans. Commun., vol. 50, no. 1, pp. 89–101, Jan. 2002.
+[2] S. H. Muller and J. B. Huber, “OFDM with reduced peak-to-average power
+ratio by optimum combination of partial transmit sequences,” Electron. Lett.,
+vol. 33, no. 5, pp. 368–369, Feb. 1997.
+[3] R. J. Baxley and G. T. Zhou, “Comparing selected mapping and partial
+transmit sequence for PAR reduction,” IEEE Trans. Broadcast., vol. 53,
+no. 4, pp. 797–803, Dec. 2007.
+[4] T. Jiang, Y. Yang, and Y.-H. Song, “Exponential companding technique for
+PAPR reduction in OFDM systems,” IEEE Trans. Broadcast., vol. 51, no. 2,
+pp. 244–248, Jun. 2005.
+[5] T. J. O’Shea, K. Karra, and T. C. Clancy, “Learning to communicate:
+Channel auto-encoders, domain speciﬁc regularizers, and attention,” in Proc.
+of ISSPIT, Limassol, Cyprus, Dec. 2016.
+[6] T. J. O’Shea, J. Corgan, and T. C. Clancy, “Convolutional radio modulation
+recognition networks,” in Proc. of EANN, Aberdeen, U.K., Sep. 2016.
+[7] I. Sohn, “A low complexity PAPR reduction scheme for OFDM systems via
+neural networks,” IEEE Commun. Lett., vol. 18, no. 2, pp. 225–228, Feb.
+2014.
+[8] I. Sohn and S. C. Kim, “Neural network based simpliﬁed clipping and
+ﬁltering technique for PAPR reduction of OFDM signals,” IEEE Commun.
+Lett., vol. 19, no. 8, pp. 1438–1441, Aug. 2015.
+[9] P. Vincent, H. Larochelle, I. Lajoie, Y. Bengio, and P.-A. Manzagol, “Stacked
+denoising autoencoders: Learning useful representations in a deep network
+with a local denoising criterion,” Journal of Machine Learning Research,
+vol. 11, pp. 3371–3408, Dec. 2010.
+[10] M. C. P. Paredes, J. J. Escudero-Garz´as, and M. J. F.-G. Garc´ıa, “PAPR
+reduction via constellation extension in OFDM systems using generalized
+benders decomposition and branch-and-bound techniques,” IEEE Trans. Veh.
+Technol., vol. 65, no. 7, pp. 5133–5145, Jul. 2016.
+[11] T. Jiang and Y. Wu, “An overview: Peak-to-average power ratio reduction
+techniques for OFDM signals,” IEEE Trans. Broadcast., vol. 54, no. 2, pp.
+257–268, Jun. 2008.
+[12] Y. Bengio, L. Yao, G. Alain, and P. Vincent, “Generalized denoising auto-
+encoders as generative models,” in Proc. of NIPS, Lake Tahoe, NV, Dec.
+2013.
+[13] S. Ioffe and C. Szegedy, “Batch normalization: Accelerating deep network
+training by reducing internal covariate shift,” in Proc. of ICML, Lille, France,
+Jul. 2015.
+[14] V. Nair and G. E. Hinton, “Rectiﬁed linear units improve restricted boltz-
+mann machines,” in Proc. of ICML, Haifa, Israel, Jun. 2010.
+[15] [Online]. Available: http://github.com/gomman/ofdm

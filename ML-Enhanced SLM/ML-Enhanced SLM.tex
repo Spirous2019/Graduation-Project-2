@@ -1,0 +1,146 @@
+\documentclass[11pt, a4paper, openany]{book}
+
+% ============================================================================
+% IMPORT CONFIGURATION & STYLING
+% ============================================================================
+\input{Preamble}
+
+% ============================================================================
+%                          BEGIN DOCUMENT
+% ============================================================================
+\begin{document}
+\raggedbottom
+\hypersetup{pageanchor=false}
+
+% ============================================================================
+% FRONT COVER (Minimalist Design)
+% ============================================================================
+\begin{titlepage}
+    \centering
+    \vspace*{2.5cm}
+
+    % Logo Area
+    \includegraphics[width=0.35\textwidth]{Figures/logo.png}\par
+
+    \vspace{2.5cm}
+
+    % Top Rule
+    {\color{rulegray}\rule{0.45\textwidth}{0.4pt}}\par
+
+    \vspace{0.8cm}
+
+    % Main Title (Serif, Elegant, like the image)
+    {\fontsize{42}{48}\selectfont\bfseries ML-Enhanced SLM\par}
+
+    \vspace{0.8cm}
+
+    % Bottom Rule
+    {\color{rulegray}\rule{0.45\textwidth}{0.4pt}}\par
+
+    \vspace{1.5cm}
+
+    % Subtitle (Italicized Serif)
+    {\Large\textit{A Modern Approach to PAPR Reduction in OFDM}}\par
+
+    \vspace{1.0cm}
+    % \vfill
+
+    % Small separator near bottom
+    {\color{rulegray}\rule{0.15\textwidth}{0.4pt}}\par
+
+    \vspace{0.8cm}
+
+    % Author Name at bottom
+    {\large SPIROUS\par}
+
+    \vspace{0.3cm}
+
+    % Year
+    {\small 2026\par}
+
+    \vspace*{1.5cm}
+
+\end{titlepage}
+
+% ============================================================================
+% TABLE OF CONTENTS
+% ============================================================================
+\hypersetup{pageanchor=true}
+\pagenumbering{roman}
+
+% --- Abstract ---
+\begin{abstract}
+This document provides a comprehensive study of \textbf{Machine Learning-Enhanced
+Selected Mapping (SLM)} techniques for \textbf{Peak-to-Average Power Ratio (PAPR)
+reduction in OFDM systems}.  It is designed for an undergraduate engineering
+student in their final year who has already studied OFDM and classical SLM, and
+now seeks to understand how modern machine learning methods---neural networks,
+autoencoders, deep unfolding, and genetic algorithms---can overcome the three
+fundamental limitations of classical SLM: high computational complexity, side
+information overhead, and blind detection difficulty.
+
+The document synthesizes six original research papers spanning 2016--2025,
+contextualized by one comprehensive survey, covering six distinct
+ML-enhanced PAPR reduction approaches: PRNet (deep autoencoder), NN-SCF
+(neural signal cancellation), GA-SLM (genetic algorithm-optimized SLM),
+ESLM-AE (extended SLM with autoencoder for DCO-OFDM), PR-DUN (deep
+unfolding network), and DL-AE (autoencoder for coherent optical OFDM).
+
+Each approach is presented with full architectural detail, mathematical
+derivations, training procedures, simulation parameters for reproducibility,
+result analysis, common misconceptions, and honest assessments of
+limitations.  A comparative analysis and future directions chapter
+synthesizes the findings across all approaches.
+\end{abstract}
+
+% --- Table of Contents ---
+\tableofcontents
+\clearpage
+
+% --- List of Figures & Tables ---
+\phantomsection
+\addcontentsline{toc}{chapter}{\listfigurename}
+\listoffigures
+\clearpage
+
+\phantomsection
+\addcontentsline{toc}{chapter}{\listtablename}
+\listoftables
+\clearpage
+
+% --- Nomenclature ---
+\input{Chapters/00a_Nomenclature}
+\input{Chapters/00b_Mathematical_Symbols}
+\clearpage
+
+\pdfbookmark[0]{Main Content}{maincontentanchor}
+\pagenumbering{arabic}
+
+% ============================================================================
+% CHAPTERS
+% ============================================================================
+\input{Chapters/01_OFDM_SLM_Refresher}
+\input{Chapters/02_ML_Techniques}
+\input{Chapters/03_PRNet}
+\input{Chapters/04_NN_SCF}
+\input{Chapters/05_GA_SLM}
+\input{Chapters/06_ESLM_AE}
+\input{Chapters/07_PR_DUN}
+\input{Chapters/08_DL_AE_CO_OFDM}
+\input{Chapters/09_Comparative_Analysis}
+\input{Chapters/10_Future_Directions}
+
+% ============================================================================
+% APPENDICES
+% ============================================================================
+\appendix
+\input{Appendices/A_Consolidated_Parameters}
+\input{Appendices/B_DL_Glossary}
+
+% ============================================================================
+% BIBLIOGRAPHY
+% ============================================================================
+\clearpage
+\printbibliography[heading=bibintoc, title={References}]
+
+\end{document}

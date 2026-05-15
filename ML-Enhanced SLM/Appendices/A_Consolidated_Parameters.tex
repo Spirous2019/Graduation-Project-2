@@ -1,0 +1,148 @@
+% ============================================================================
+% APPENDIX A — CONSOLIDATED SIMULATION PARAMETERS
+% ============================================================================
+\chapter{Consolidated Simulation Parameters}
+\label{app:consolidated_params}
+
+This appendix consolidates the simulation and system parameters from all
+six ML-enhanced PAPR reduction approaches into four self-contained reference
+tables, enabling direct comparison of experimental setups.
+
+
+% --- Table 1: System Configuration ---
+\begin{table}[H]
+    \centering
+    \caption{System configuration parameters across all six
+             approaches~\cite{kim2017novel,zou2021novel,ali2016new,hao2019extended,nguyen2022deep,alnaseri2025deep}.}
+    \label{tab:consolidated_system}
+    \scriptsize
+    \begin{tabularx}{\textwidth}{@{} l *{6}{>{\centering\arraybackslash}X} @{}}
+        \toprule
+        \textbf{Parameter}
+        & \textbf{PRNet} & \textbf{NN-SCF} & \textbf{GA-SLM}
+        & \textbf{ESLM-AE} & \textbf{PR-DUN} & \textbf{DL-AE} \\
+        \midrule
+        Subcarriers ($N$)
+        & 64 & 128 & 128 & 128 & 64--256 & 64 \\
+        Modulation
+        & QPSK & QPSK & QPSK & 4-QAM & QPSK, 16-QAM & 16-QAM \\
+        OFDM type
+        & RF & RF & RF & DCO & RF & CO \\
+        Oversampling
+        & 4 & 4 & 4 & --- & 4 & --- \\
+        Channel
+        & AWGN & AWGN & --- & LOS, Rician, DOW & AWGN & Fiber \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+
+% --- Table 2: Architecture ---
+\begin{table}[H]
+    \centering
+    \caption{Architecture parameters across all six
+             approaches~\cite{kim2017novel,zou2021novel,ali2016new,hao2019extended,nguyen2022deep,alnaseri2025deep}.}
+    \label{tab:consolidated_arch}
+    \scriptsize
+    \begin{tabularx}{\textwidth}{@{} l *{6}{>{\centering\arraybackslash}X} @{}}
+        \toprule
+        \textbf{Parameter}
+        & \textbf{PRNet} & \textbf{NN-SCF} & \textbf{GA-SLM}
+        & \textbf{ESLM-AE} & \textbf{PR-DUN} & \textbf{DL-AE} \\
+        \midrule
+        ML type
+        & DNN/AE & DNN & GA & DNN/AE & Unfold & DNN/AE \\
+        Hidden layers
+        & 3+3 & 4+4 & --- & 3 & --- & 3+3 \\
+        Neurons / layer
+        & 512 & 512 & --- & 256 & --- & 256 \\
+        Activation
+        & ReLU/Lin. & ReLU & --- & ReLU/Lin. & --- & ReLU/Lin. \\
+        BatchNorm
+        & Yes & --- & --- & --- & --- & Yes \\
+        Dropout
+        & 0.1 & --- & --- & --- & --- & --- \\
+        Trainable params
+        & ${\sim}10^6$ & ${\sim}10^6$ & 0 & ${\sim}10^5$ & ${\sim}20$ & ${\sim}10^5$ \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+
+% --- Table 3: Training Configuration ---
+\begin{table}[H]
+    \centering
+    \caption{Training configuration parameters across all six
+             approaches~\cite{kim2017novel,zou2021novel,ali2016new,hao2019extended,nguyen2022deep,alnaseri2025deep}.}
+    \label{tab:consolidated_training}
+    \scriptsize
+    \begin{tabularx}{\textwidth}{@{} l *{6}{>{\centering\arraybackslash}X} @{}}
+        \toprule
+        \textbf{Parameter}
+        & \textbf{PRNet} & \textbf{NN-SCF} & \textbf{GA-SLM}
+        & \textbf{ESLM-AE} & \textbf{PR-DUN} & \textbf{DL-AE} \\
+        \midrule
+        Optimizer
+        & Adam & Adam & --- & Adam & Adam & Adam \\
+        Learning rate
+        & $10^{-3}$ & $10^{-3}$ & --- & $10^{-3}$ & $10^{-3}$ & $10^{-3}$ \\
+        Loss balance
+        & $\alpha=0.5$ & $\alpha=0.1$--$0.9$ & --- & $\beta$ & --- & $\gamma$ \\
+        Training set
+        & $10^5$ & $2\times 10^5$ & --- & --- & $10^5$ & $10^5$ \\
+        Batch size
+        & 256 & 500 & --- & --- & 256 & 256 \\
+        Epochs
+        & 200 & 500 & --- & 300 & 100 & 200 \\
+        Training SNR
+        & 15~dB & --- & --- & --- & --- & 20~dB \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+
+% --- Table 4: Algorithm-Specific Parameters ---
+\begin{table}[H]
+    \centering
+    \caption{Algorithm-specific parameters (GA-SLM, PR-DUN, and
+             ESLM-AE)~\cite{ali2016new,nguyen2022deep,hao2019extended}.}
+    \label{tab:consolidated_specific}
+    \scriptsize
+    \begin{tabularx}{\textwidth}{@{} l *{6}{>{\centering\arraybackslash}X} @{}}
+        \toprule
+        \textbf{Parameter}
+        & \textbf{PRNet} & \textbf{NN-SCF} & \textbf{GA-SLM}
+        & \textbf{ESLM-AE} & \textbf{PR-DUN} & \textbf{DL-AE} \\
+        \midrule
+        Population ($P$)
+        & --- & --- & 20--100 & --- & --- & --- \\
+        Generations ($G$)
+        & --- & --- & 100--500 & --- & --- & --- \\
+        Crossover ($p_c$)
+        & --- & --- & 0.8 & --- & --- & --- \\
+        Mutation ($p_m$)
+        & --- & --- & 0.01--0.05 & --- & --- & --- \\
+        Unfolded layers ($L$)
+        & --- & --- & --- & --- & 5--20 & --- \\
+        SLM candidates ($U$)
+        & --- & --- & --- & 4, 8, 16 & --- & --- \\
+        Phase alphabet
+        & --- & --- & $\{+1,-1\}$ & $[0,2\pi)$ & --- & --- \\
+        \bottomrule
+    \end{tabularx}
+\end{table}
+
+\begin{keyinsight}
+    Several patterns emerge from the consolidated tables:
+    \begin{itemize}
+        \item All DNN-based approaches use the \textbf{Adam optimizer}
+              with learning rate $10^{-3}$---this has become the de facto
+              standard in the field.
+        \item Subcarrier counts remain moderate ($N \le 256$) across all
+              studies, leaving scalability to practical system sizes
+              ($N = 2048$+) as an open question.
+        \item PR-DUN stands out with dramatically fewer trainable parameters
+              ($\sim 20$) compared to all other neural approaches
+              ($10^5$--$10^6$).
+    \end{itemize}
+\end{keyinsight}

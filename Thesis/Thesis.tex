@@ -1,0 +1,284 @@
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  THESIS.TEX  —  Graduation Project Part II
+%  Machine Learning Techniques for PAPR Reduction in Multicarrier Communication Systems
+%  Ain Shams University | Faculty of Engineering | 2025/2026
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% ==============================================================================
+% DOCUMENT CLASS
+%   twoside   : alternating inner/outer margins for binding (print mode)
+%   openright : every chapter starts on a right-hand (odd) page
+% ==============================================================================
+\documentclass[11pt, a4paper, twoside, openright]{book}
+
+% ==============================================================================
+% LOAD PREAMBLE (packages, styles, environments, metadata commands)
+% ==============================================================================
+\input{Preamble}
+
+% ==============================================================================
+% THESIS METADATA
+%   All strings are defined here once; the cover page, declaration, and
+%   PDF metadata all pull from these macros automatically.
+% ==============================================================================
+\thesistitle{Machine Learning Techniques for PAPR Reduction in Multicarrier Communication Systems}
+\supervisor{Dr. Michael Ibrahim}
+\degree{Bachelor of Engineering}
+\university{Ain Shams University}
+\faculty{Faculty of Engineering}
+\department{Electronics and Communications Engineering Department}
+\author{%
+    Nour-Eldin Mohamed Mostafa,
+    Youssef Samir Sleem Ahmed,
+    Muhammad Mahmoud Muhammad,
+    Reem Nader Saeed,
+    Basel Mohamed Ramadan,
+    Ahmed Walid Hassan,
+    Yosef Ahmed Mohamed%
+}
+
+% Push title and author into PDF metadata
+\AtBeginDocument{%
+    \hypersetup{pdftitle={\ttitle}, pdfauthor={\authorname}}%
+}
+
+% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{document}
+\raggedbottom
+\hypersetup{pageanchor=false}     % Suppress anchor warnings on the cover
+
+% ==============================================================================
+% COVER PAGE  (Institutional — matches GP1 style)
+% ==============================================================================
+\begin{titlepage}
+    \setlength{\parskip}{0pt}
+    \singlespacing       % Reset global \setstretch{1.35} — cover must be single-spaced
+    \centering
+
+    % --- University logo ---
+    \includegraphics[width=5cm]{Figures/logo.png}
+
+    \vspace{0.8cm}
+
+    % --- Institution ---
+    {\scshape\LARGE \textcolor{asuBlue}{\univname}\par}
+    \vspace{0.3cm}
+    {\large \facname\par}
+    {\large \deptname\par}
+
+    \vspace{1cm}
+
+    % --- Document type ---
+    \textcolor{asuBlue}{\textsc{\Large Graduation Project Thesis --- Part~II}}
+
+    \vspace{0.8cm}
+
+    % --- Title block ---
+    \HRule\\[0.4cm]
+    {\LARGE\bfseries\textcolor{asuBlue}{\ttitle}\par}
+    \vspace{0.4cm}
+    \HRule
+
+    \vfill
+
+    % --- Team ---
+    {\large\textcolor{asuBlue}{\textbf{Project Team}}\par}
+    \vspace{0.5cm}
+    \begin{tabular}{c c}
+        Nour-Eldin Mohamed Mostafa  & Youssef Samir Sleem Ahmed  \\[0.2cm]
+        Muhammad Mahmoud Muhammad   & Reem Nader Saeed           \\[0.2cm]
+        Basel Mohamed Ramadan       & Ahmed Walid Hassan          \\[0.2cm]
+        \multicolumn{2}{c}{Yosef Ahmed Mohamed}
+    \end{tabular}
+
+    \vspace{1.2cm}
+
+    % --- Supervisor ---
+    {\large\textcolor{asuBlue}{\textbf{Supervisor}}\par}
+    \vspace{0.3cm}
+    {\large \supname\par}
+
+    \vfill   % single \vfill anchors the degree statement to the bottom
+
+    % --- Degree statement ---
+    \textit{A thesis submitted in partial fulfillment of the requirements\\
+            for the degree of \degreename}
+
+    \vspace{1cm}
+
+    {\large\textbf{Academic Year: 2025/2026}}
+
+\end{titlepage}
+
+% ==============================================================================
+% FRONT MATTER  (roman page numbers; plain page style — no running heads)
+% ==============================================================================
+\hypersetup{pageanchor=true}
+\frontmatter                  % Switches to roman numerals; \chapter* suppresses numbers
+\pagestyle{plain}
+
+% ------------------------------------------------------------------------------
+% DECLARATION OF AUTHORSHIP
+% ------------------------------------------------------------------------------
+\begin{declaration}
+\addchaptertocentry{\authorshipname}
+
+\noindent We, \authorname, declare that this thesis titled
+\enquote{\ttitle} and the work presented in it are our own.
+We confirm that this material, submitted for assessment on the programme
+leading to the award of \degreename, is entirely our own work.
+We have exercised reasonable care to ensure that the work is original and
+does not, to the best of our knowledge, breach any law of copyright; it has
+not been taken from the work of others except to the extent that such work
+has been cited and acknowledged within the text.
+
+\vspace{2em}
+
+\noindent Signed:\\ \rule[0.5em]{25em}{0.5pt}\\[0.3em]
+\noindent Signed:\\ \rule[0.5em]{25em}{0.5pt}\\[0.3em]
+\noindent Signed:\\ \rule[0.5em]{25em}{0.5pt}\\[0.3em]
+\noindent Signed:\\ \rule[0.5em]{25em}{0.5pt}\\[0.3em]
+\noindent Signed:\\ \rule[0.5em]{25em}{0.5pt}\\[0.3em]
+\noindent Signed:\\ \rule[0.5em]{25em}{0.5pt}\\[0.3em]
+\noindent Signed:\\ \rule[0.5em]{25em}{0.5pt}\\[0.6em]
+\noindent Date:\\  \rule[0.5em]{25em}{0.5pt}
+
+\end{declaration}
+
+% ------------------------------------------------------------------------------
+% ABSTRACT
+% ------------------------------------------------------------------------------
+\begin{abstract}
+\addchaptertocentry{Abstract}
+
+Orthogonal Frequency-Division Multiplexing (OFDM) is the dominant waveform
+for modern high-speed wireless communication systems --- including Wi-Fi,
+4G~LTE, and 5G~NR --- owing to its robustness against multipath fading and
+high spectral efficiency.  Its principal drawback is a high
+Peak-to-Average Power Ratio (PAPR), which forces the High-Power Amplifier
+(HPA) at the transmitter to operate in its non-linear region, causing
+in-band distortion and severe power inefficiency.
+
+This document is \textbf{Part~II} of a two-semester graduation project.
+Part~I presented a comprehensive simulation and analysis of classical PAPR
+reduction techniques --- Amplitude Clipping and Filtering, Tone Reservation,
+Selected Mapping (SLM), and Partial Transmit Sequence (PTS) --- establishing
+both their capabilities and their fundamental limitations: high computational
+complexity, mandatory side information, and reliance on exhaustive candidate
+search.
+
+The present work applies \textbf{machine learning} to overcome those
+limitations.  The central contribution is a detailed study of
+\textbf{PRNet} (Kim et al., 2017), the first end-to-end deep-learning system
+for joint PAPR and BER optimisation in OFDM.  PRNet models the entire
+transmitter--channel--receiver chain as a deep autoencoder: a DNN encoder
+learns a data-dependent constellation shaping that suppresses time-domain
+peaks, while a jointly trained DNN decoder recovers the transmitted bits
+without requiring any side information at the receiver.  The document derives
+the full system model, joint \((\text{MSE}+\text{PAPR})\) loss function,
+two-stage training procedure, and reproduces the BER-vs.-SNR and CCDF
+simulation results from the original paper --- including a critical audit of
+the peak-amplitude proxy used in the published CCDF curve.
+
+Chapter~1 provides a self-contained, mathematically complete refresher of
+OFDM, PAPR, and the SLM algorithm, establishing the notation and motivation
+that connect Part~I to Part~II.  Chapter~2 develops PRNet in full detail,
+from autoencoder architecture and loss functions to training dynamics and
+real-world deployment considerations.  Further ML-enhanced PAPR reduction
+methods will be added in subsequent chapters as the project progresses.
+
+\end{abstract}
+
+% ------------------------------------------------------------------------------
+% ACKNOWLEDGEMENTS
+% ------------------------------------------------------------------------------
+\begin{acknowledgements}
+\addchaptertocentry{\acknowledgementname}
+
+This project represents not only two semesters of dedicated engineering work,
+but the culmination of our undergraduate journey at Ain Shams University.
+It would not have been possible without the guidance and support of many
+individuals.
+
+First and foremost, we express our deepest gratitude to our supervisor,
+\supname, for their patience, technical insight, and for steering us in the
+right direction whenever we encountered a challenge --- whether mathematical,
+computational, or conceptual.
+
+We are grateful to the faculty and staff at the \deptname\ for providing the
+resources and foundational knowledge required to tackle this research.  A
+special thanks to all the professors who challenged us to think as engineers,
+not merely as students.
+
+To our families: thank you for being our anchor.  Your unwavering support,
+encouragement, and understanding during long nights and stressful deadlines
+meant more than words can express.  We hope we have made you proud.
+
+Finally, to our friends and fellow students --- thank you for the shared study
+sessions, the laughter, and the moral support that carried us through.
+
+\end{acknowledgements}
+
+% ------------------------------------------------------------------------------
+% TABLE OF CONTENTS
+% ------------------------------------------------------------------------------
+\tableofcontents
+\clearpage
+
+% ------------------------------------------------------------------------------
+% LIST OF FIGURES
+% ------------------------------------------------------------------------------
+\phantomsection
+\addcontentsline{toc}{chapter}{\listfigurename}
+\listoffigures
+\clearpage
+
+% ------------------------------------------------------------------------------
+% LIST OF TABLES
+% ------------------------------------------------------------------------------
+\phantomsection
+\addcontentsline{toc}{chapter}{\listtablename}
+\listoftables
+\clearpage
+
+% ------------------------------------------------------------------------------
+% NOMENCLATURE & MATHEMATICAL SYMBOLS
+% ------------------------------------------------------------------------------
+\input{Chapters/00a_Nomenclature}
+\input{Chapters/00b_Mathematical_Symbols}
+\clearpage
+
+% ==============================================================================
+% MAIN MATTER  (arabic page numbers; "thesis" page style — running heads ON)
+% ==============================================================================
+\pdfbookmark[0]{Main Content}{maincontentanchor}
+\mainmatter
+\pagestyle{thesis}            % ← This is where the headers/footers activate
+
+% ==============================================================================
+% CHAPTERS
+% ==============================================================================
+\input{Chapters/01_OFDM_SLM_Refresher}     % Ch. 1 — OFDM & SLM Refresher
+\input{Chapters/03_PRNet}                   % Ch. 2 — PRNet (Deep Autoencoder)
+% \input{Chapters/04_NN_SCF}               % Ch. 3 — Neural Network SCF
+% \input{Chapters/05_GA_SLM}               % Ch. 4 — GA-Optimized SLM
+% \input{Chapters/06_ESLM_AE}              % Ch. 5 — Extended SLM Autoencoder
+% \input{Chapters/07_PR_DUN}               % Ch. 6 — PR-DUN
+% \input{Chapters/08_DL_AE_CO_OFDM}       % Ch. 7 — DL AE for CO-OFDM
+% \input{Chapters/09_Comparative_Analysis} % Ch. 8 — Comparative Analysis
+% \input{Chapters/10_Future_Directions}    % Ch. 9 — Future Directions
+
+% ==============================================================================
+% APPENDICES
+% ==============================================================================
+\appendix
+\input{Appendices/A_Consolidated_Parameters}
+\input{Appendices/B_DL_Glossary}
+
+% ==============================================================================
+% BIBLIOGRAPHY
+% ==============================================================================
+\clearpage
+\printbibliography[heading=bibintoc, title={References}]
+
+\end{document}

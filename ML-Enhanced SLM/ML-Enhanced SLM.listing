@@ -1,0 +1,11 @@
+if training:
+    eta_lin = 10.0 ** (self.eta_db / 10.0)
+    sig_pow = tf.reduce_mean(tf.cast(tf.abs(x_time)**2, tf.float32))
+    noise_var = eta_lin * tf.cast(sig_pow, tf.float32)
+    noise_std = tf.sqrt(noise_var / 2.0)
+    noise = tf.complex(
+        tf.random.normal(tf.shape(x_time)) * noise_std,
+        tf.random.normal(tf.shape(x_time)) * noise_std,
+    )
+    y = x_time + tf.cast(noise, x_time.dtype)
+    Y = tf_ofdm_fft(y, self.N)

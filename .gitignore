@@ -1,0 +1,129 @@
+# ============================================================
+#  .gitignore — Graduation Project 2
+#  Covers: LaTeX build artifacts, Python cache, OS junk
+#
+#  NOTE: *.bib (source bibliography) is intentionally NOT
+#  ignored. Only biber-generated intermediate files are ignored.
+# ============================================================
+
+# ------------------------------------------------------------
+# LaTeX build artifacts (compiler output — never commit these)
+# ------------------------------------------------------------
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.loa
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.synctex(busy)
+*.pdfsync
+*.dvi
+*.idx
+*.ilg
+*.ind
+*.nav
+*.snm
+*.vrb
+*.maf
+*.mtc
+*.mtc[0-9]
+
+# ------------------------------------------------------------
+# BibLaTeX / Biber intermediate files
+#   *.bib  ← SOURCE file, NOT ignored (required to compile)
+#   below  ← generated output files, always ignored
+# ------------------------------------------------------------
+*.bbl
+*.bcf
+*.blg
+*.run.xml
+*-blx.aux
+*-blx.bib
+
+# ------------------------------------------------------------
+# Nomenclature / Glossary / Index build files
+# ------------------------------------------------------------
+*.acn
+*.acr
+*.alg
+*.glg
+*.glo
+*.gls
+*.xdy
+
+# ------------------------------------------------------------
+# minted (code highlighting) temp folder
+# ------------------------------------------------------------
+_minted*/
+
+# ------------------------------------------------------------
+# LuaLaTeX / XeLaTeX font cache
+# ------------------------------------------------------------
+*.fmt
+*.fmtlog
+luatex-cache/
+
+# ------------------------------------------------------------
+# TEMP folder (scratch work, not for version control)
+# ------------------------------------------------------------
+TEMP/
+
+# ------------------------------------------------------------
+# ML model weights & checkpoints (can be 100 MB–several GB;
+# regenerate by running the training script)
+# ------------------------------------------------------------
+*.h5
+*.weights.h5
+*.keras
+*.pt
+*.pth
+*.ckpt
+*.ckpt.index
+*.ckpt.data-*
+*.pb
+*.onnx
+*.pkl
+*.joblib
+saved_model/
+
+# ------------------------------------------------------------
+# Python / Jupyter (Codes/ folder)
+# ------------------------------------------------------------
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.ipynb_checkpoints/
+*.egg-info/
+dist/
+build/
+.env
+.venv/
+env/
+
+# ------------------------------------------------------------
+# IDEs & editors
+# ------------------------------------------------------------
+.idea/
+.vscode/
+*.sublime-project
+*.sublime-workspace
+
+# ------------------------------------------------------------
+# OS generated
+# ------------------------------------------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+ehthumbs.db
+
+# ------------------------------------------------------------
+# Compiled PDF output (tracked by default so the compiled
+# thesis is available without needing to compile locally).
+# Uncomment the line below to exclude PDFs from the repo.
+# ------------------------------------------------------------
+# *.pdf

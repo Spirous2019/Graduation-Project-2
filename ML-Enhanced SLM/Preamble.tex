@@ -1,0 +1,344 @@
+% ============================================================================
+% PREAMBLE.TEX
+% ============================================================================
+
+% --- Core Fonts and Typography ---
+\usepackage{fontspec}
+\setmainfont{Source Serif 4}
+\setmonofont{JetBrains Mono}[Scale=0.88]
+\usepackage{microtype}
+
+% --- Language ---
+\usepackage[english]{babel}
+
+% --- Page Layout (Fixing headheight for fancyhdr warning) ---
+\usepackage[margin=1in, top=1.2in, bottom=1.2in, headheight=24pt]{geometry}
+
+% --- Line Spacing & Paragraphs ---
+\usepackage{setspace}
+\usepackage{parskip}
+\raggedbottom
+
+% --- Graphics & Colors ---
+\usepackage{graphicx}
+\graphicspath{{Figures/}{./}}
+\usepackage{xcolor}
+\usepackage{float}
+
+% ============================================================================
+% COLOR PALETTE
+% ============================================================================
+% Dark Navy for chapters and headings
+\definecolor{navyDark}{HTML}{0A192F}
+\definecolor{navyMedium}{HTML}{112240}
+
+\definecolor{chaptergray}{gray}{0.35}
+\definecolor{rulegray}{gray}{0.55}
+
+% Block-specific colors (unique per block type)
+\definecolor{motivationColor}{HTML}{4F46E5}      % Indigo
+\definecolor{motivationBg}{HTML}{EEF2FF}
+\definecolor{insightColor}{HTML}{0D9488}         % Teal
+\definecolor{insightBg}{HTML}{F0FDFA}
+\definecolor{misconceptionColor}{HTML}{E11D48}   % Rose
+\definecolor{misconceptionBg}{HTML}{FFF1F2}
+\definecolor{exampleColor}{HTML}{D97706}         % Amber
+\definecolor{exampleBg}{HTML}{FFFBEB}
+\definecolor{codeNarrativeColor}{HTML}{7C3AED}   % Violet
+\definecolor{codeNarrativeBg}{HTML}{F5F3FF}
+
+% Code listing syntax colors (One Dark theme - matched from image)
+\definecolor{codeListingBg}{HTML}{F6F8FA}        % Light grey background (kept)
+\definecolor{codeListingBar}{HTML}{3B82F6}       % Blue left bar
+\definecolor{codeKeyword}{HTML}{C678DD}          % import, def, for, return, class, if, while: Magenta
+\definecolor{codeString}{HTML}{98C379}           % Strings: Green
+\definecolor{codeComment}{HTML}{7F848E}          % Comments: Grey
+\definecolor{codeFunction}{HTML}{61AFEF}         % Function calls/defs: Light Blue
+\definecolor{codeNumber}{HTML}{D19A66}           % Numbers + params: Orange
+\definecolor{codeSelf}{HTML}{E06C75}             % self, this, True, False: Red
+\definecolor{codeClassName}{HTML}{E5C07B}        % Class names, types: Yellow
+\definecolor{codeBuiltin}{HTML}{56B6C2}          % Builtins (len, range, print, min, max): Cyan
+\definecolor{codeLineNum}{HTML}{999999}          % Line numbers: grey
+
+% --- Headers, Titles, Lists ---
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+
+% --- Captions ---
+\usepackage{caption}
+\usepackage{subcaption}
+
+% --- Floats & Tables ---
+\usepackage{booktabs}
+\usepackage{longtable}
+
+% --- SI Units ---
+\usepackage{siunitx}
+
+% --- Math ---
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{bm}
+\usepackage{mathtools}
+
+% --- Algorithms ---
+\usepackage[ruled,vlined,linesnumbered]{algorithm2e}
+
+% --- Tables (extended) ---
+\usepackage{multirow}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{placeins}
+
+% --- Custom Boxes & Code Listings ---
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+
+% --- Quotations ---
+\usepackage[autostyle=true]{csquotes}
+
+% --- Hyperlinks & Bookmarks ---
+\usepackage{hyperref}
+\hypersetup{
+    pdfpagemode        = {UseOutlines},
+    bookmarksopen      = true,
+    bookmarksopenlevel = 0,
+    hypertexnames      = false,
+    colorlinks         = true,
+    linkcolor          = black,
+    citecolor          = blue,
+    urlcolor           = navyDark,
+    filecolor          = black,
+    pdfstartview       = {FitV},
+    unicode,
+    breaklinks         = true,
+    pdftitle           = {ML-Enhanced SLM: A Modern Approach to PAPR Reduction in OFDM},
+    pdfauthor          = {Spirous}
+}
+\usepackage{bookmark}
+
+% --- Bibliography ---
+\usepackage[backend=biber, style=ieee, sorting=none, natbib=true]{biblatex}
+\addbibresource{References.bib}
+
+% ============================================================================
+% DOCUMENT SETTINGS
+% ============================================================================
+\flushbottom
+
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.9}
+\renewcommand{\textfraction}{0.1}
+\renewcommand{\floatpagefraction}{0.85}
+
+\setcounter{tocdepth}{2}
+\setcounter{secnumdepth}{2}
+
+\setstretch{1.35}
+\setlength{\parskip}{0.42em plus 0.1em minus 0.03em}
+\setlength{\emergencystretch}{5em}
+\setlength{\parindent}{0pt}
+
+\clubpenalty=10000
+\widowpenalty=10000
+\displaywidowpenalty=10000
+\doublehyphendemerits=10000
+\brokenpenalty=10000
+\interfootnotelinepenalty=9999
+
+\setlist{itemsep=0.35em, topsep=0.45em, parsep=0pt, partopsep=0pt}
+
+% ============================================================================
+% CAPTION STYLING
+% ============================================================================
+\captionsetup{
+    justification = centerlast,
+    font          = small,
+    labelfont     = {sc, color=navyDark},
+    margin        = 30pt
+}
+
+% ============================================================================
+% TYPOGRAPHY --- CHAPTER & SECTION STYLING (All Serif)
+% ============================================================================
+\newcommand{\chapterrule}{\vspace*{0.5ex}\noindent\textcolor{navyDark}{\rule{\textwidth}{1.5pt}}}
+
+\titleformat{\chapter}[display]
+    {\normalfont\Large\bfseries}
+    {\textcolor{navyDark}{\MakeUppercase{\chaptertitlename}\ \thechapter}}
+    {0.5ex}
+    {\huge\raggedright\bfseries\color{navyDark}}[\chapterrule]
+\titlespacing*{\chapter}{0pt}{-25pt}{12pt}
+
+\titleformat{\section}
+    {\normalfont\Large\bfseries\color{navyDark}}
+    {\thesection}
+    {1em}
+    {}
+\titlespacing*{\section}{0pt}{1.5ex plus 0.5ex minus 0.2ex}{1ex plus 0.2ex}
+
+\titleformat{\subsection}
+    {\normalfont\large\bfseries\color{navyMedium}}
+    {\thesubsection}
+    {1em}
+    {}
+\titlespacing*{\subsection}{0pt}{1.5ex plus 0.5ex minus 0.2ex}{0.8ex plus 0.2ex}
+
+% ============================================================================
+% HEADERS & FOOTERS (All Serif)
+% ============================================================================
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE,RO]{\thepage}
+\fancyhead[RE]{\textit{ML-Enhanced SLM}}
+\fancyhead[LO]{\textit{\nouppercase{\leftmark}}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{navyDark}\leaders\hrule height \headrulewidth\hfill}}
+\renewcommand{\chaptermark}[1]{\markboth{#1}{}}
+
+\fancypagestyle{plain}{
+    \fancyhf{}
+    \fancyfoot[C]{\thepage}
+    \renewcommand{\headrulewidth}{0pt}
+    \renewcommand{\footrulewidth}{0pt}
+}
+
+% ============================================================================
+% CODE LISTING STYLE (Basic logic, without margins - handled by tcolorbox)
+% ============================================================================
+\lstdefinestyle{modern}{
+    basicstyle       = \ttfamily\small\color{black},
+    % --- Primary keywords (import, def, for, return, class, if, while, from, as, in, with) ---
+    keywordstyle     = \color{codeKeyword}\bfseries,
+    % --- self / True / False / None / builtins / functions ---
+    % We remove special colors for builtins and functions to keep them standard black
+    emph             = {np, numpy, ofdm_symbol, best_papr, candidate, phases, papr, N, U, inf, pi, exp, fft, ifft, mean, array, zeros, ones, random, choice, dot, sum, sqrt, log10, len, range, print, min, max, abs, int, float, str, list, dict, type, super, open, enumerate, sorted, map, filter, zip, isinstance, hasattr, getattr, setattr},
+    emphstyle        = \color{black},
+    % --- Comments ---
+    commentstyle     = \color{codeComment}\itshape,
+    % --- Strings ---
+    stringstyle      = \color{codeString},
+    % --- Line numbers ---
+    numberstyle      = \tiny\ttfamily\color{codeLineNum},
+    numbers          = left,
+    numbersep        = 12pt,
+    % --- Complete purge of default listings Python classes ---
+    % 1. Strip ALL class 2 built-in functions the package knows
+    classoffset      = 1,
+    % 2. Empty out the default lists for keywords 2, 3, etc.
+    keywords         = [2]{},
+    keywords         = [3]{},
+    keywords         = [4]{},
+    keywords         = [5]{},
+    % 3. Force the style of these stripped categories to black anyway just in case
+    keywordstyle     = [2]\color{black},
+    keywordstyle     = [3]\color{black},
+    keywordstyle     = [4]\color{black},
+    keywordstyle     = [5]\color{black},
+    % 4. Force default emph dictionary to black
+    emphstyle        = \color{black},
+    classoffset      = 0,
+    % --- Layout ---
+    breaklines       = true,
+    tabsize          = 4,
+    showstringspaces = false,
+    % --- Tokenization rules ---
+    alsoletter       = {0123456789_},
+    % --- Number coloring ---
+    literate         = {0}{{{\color{codeNumber}0}}}1
+                       {1}{{{\color{codeNumber}1}}}1
+                       {2}{{{\color{codeNumber}2}}}1
+                       {3}{{{\color{codeNumber}3}}}1
+                       {4}{{{\color{codeNumber}4}}}1
+                       {5}{{{\color{codeNumber}5}}}1
+                       {6}{{{\color{codeNumber}6}}}1
+                       {7}{{{\color{codeNumber}7}}}1
+                       {8}{{{\color{codeNumber}8}}}1
+                       {9}{{{\color{codeNumber}9}}}1
+}
+
+% ============================================================================
+% CUSTOM BLOCKS --- vertical-bar boxes via tcolorbox
+% ============================================================================
+\tcbset{
+    blockbase/.style={
+        enhanced,
+        sharp corners,
+        boxrule       = 0pt,
+        frame hidden,
+        borderline west = {3.5pt}{0pt}{#1},
+        left          = 10pt,
+        right         = 10pt,
+        top           = 6pt,
+        bottom        = 6pt,
+        before skip   = 6pt,
+        after skip    = 8pt,
+        fonttitle     = \bfseries\large, % Back to Serif
+        coltitle      = #1,
+        attach title to upper = {\par\vspace{0.2em}},
+    }
+}
+
+% --- Motivation Block ---
+\newtcolorbox{motivation}[1][Chapter Motivation]{%
+    blockbase = motivationColor,
+    colback   = motivationBg,
+    title     = {#1}
+}
+
+% --- Key Insight Block ---
+\newtcolorbox{keyinsight}[1][Key Insight]{%
+    blockbase = insightColor,
+    colback   = insightBg,
+    title     = {#1}
+}
+
+% --- Misconception Block ---
+\newtcolorbox{misconception}[1][Common Misconception]{%
+    blockbase = misconceptionColor,
+    colback   = misconceptionBg,
+    title     = {#1}
+}
+
+% --- Working Example Block ---
+\newtcolorbox{workingexample}[1][Working Example]{%
+    blockbase = exampleColor,
+    colback   = exampleBg,
+    title     = {#1}
+}
+
+% --- Code Narrative Block ---
+\newtcolorbox{codenarrative}[1][Code Walkthrough]{%
+    blockbase = codeNarrativeColor,
+    colback   = codeNarrativeBg,
+    title     = {#1}
+}
+
+% --- TCOLORBOX LISTING WRAPPER (Guarantees perfect alignment!) ---
+\newtcblisting{codelisting}[3][]{
+    blockbase = codeListingBar,
+    colback   = codeListingBg,
+    title     = {#2},
+    listing only,
+    listing options={
+        style=modern,
+        language=#3,
+        xleftmargin=16pt, % pushes code slightly right to make space for numbers
+        #1
+    }
+}
+
+% ============================================================================
+% FRONT-MATTER ENVIRONMENTS
+% ============================================================================
+\newenvironment{abstract}{%
+    \clearpage
+    \thispagestyle{plain}
+    \begin{center}
+        {\huge\bfseries\color{navyDark} Abstract\par}
+        \vspace{1cm}
+    \end{center}
+}{%
+    \vfill\null
+}

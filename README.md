@@ -1,24 +1,13 @@
 # Graduation Project 2 — Machine Learning Techniques for PAPR Reduction in Multicarrier Communication Systems
 
-**Ain Shams University · Faculty of Engineering · Electronics and Communications Engineering Department**
+**Ain Shams University · Faculty of Engineering · Electronics and Communications Engineering Department**  
 **Academic Year 2025/2026 · Supervisor: Dr. Michael Ibrahim**
 
 ---
 
 ## Overview
 
-This repository contains the full documentation, simulation code, and research materials for the **second part** of a two-semester graduation project.
-
-**Part I** (previous semester) established the theoretical and simulation baseline for Peak-to-Average Power Ratio (PAPR) reduction in OFDM systems, covering four classical techniques:
-
-| Technique | Key Idea |
-|---|---|
-| Amplitude Clipping & Filtering | Hard-limit signal peaks; re-filter distortion |
-| Tone Reservation | Reserve subcarriers to generate a cancelling peak signal |
-| Selected Mapping (SLM) | Transmit the candidate with lowest PAPR from $U$ phase-rotated variants |
-| Partial Transmit Sequence (PTS) | Partition subcarriers into sub-blocks; optimise per-block phase factors |
-
-**Part II (this repository)** applies **machine learning** to overcome the fundamental limitations of those classical methods — high computational complexity, mandatory side information overhead, and exhaustive candidate search — by replacing hand-designed algorithms with end-to-end learned mappings.
+This repository contains the simulation codebase, research materials, and documentation for **Part II** of our graduation project, which investigates the application of machine learning (ML) and deep learning (DL) methodologies to solve the Peak-to-Average Power Ratio (PAPR) problem in multicarrier communication systems.
 
 ---
 
@@ -33,106 +22,32 @@ This repository contains the full documentation, simulation code, and research m
 
 ---
 
-## Current Content
+## The PAPR Problem in OFDM
 
-### Chapter 1 — OFDM & SLM Refresher (`Thesis/Chapters/01_OFDM_SLM_Refresher.tex`)
-A self-contained, mathematically complete refresher bridging Part I and Part II:
-- OFDM signal model, subcarrier mapping, IFFT-based modulation
-- PAPR definition, CCDF as the standard performance metric
-- SLM algorithm in full detail: phase vector generation, candidate selection, side information problem
-- Why SLM's three limitations motivate the deep-learning approach
+Orthogonal Frequency Division Multiplexing (OFDM) is a cornerstone of modern wireless communications (e.g., 5G, Wi-Fi), offering high spectral efficiency and robustness against multi-path fading. However, a major inherent drawback of OFDM is its high Peak-to-Average Power Ratio (PAPR). 
 
-### Chapter 2 — PRNet: Deep Autoencoder for PAPR Reduction (`Thesis/Chapters/03_PRNet.tex`)
-Full exposition of **PRNet** (Kim et al., 2017) — the first end-to-end deep-learning system for joint PAPR and BER optimisation in OFDM:
-- Autoencoder architecture: DNN encoder (transmitter) + AWGN channel + DNN decoder (receiver)
-- Joint loss function: $\mathcal{L} = \text{MSE} + \lambda \cdot \text{PAPR penalty}$
-- Two-stage training procedure: BER-first pre-training, then joint BER+PAPR fine-tuning
-- Corruption-based channel simulation during training
-- Simulation results: BER vs SNR, PAPR CCDF, corruption-level sweep, $\lambda$ trade-off curves
-- Complexity analysis, common misconceptions, limitations, and connections to subsequent work
+Because an OFDM signal is the sum of many independent, phase-modulated subcarriers, there are instances where these subcarriers align constructively in phase. When this occurs, the instantaneous peak power of the transmitter signal spikes significantly above its average power. 
+
+To transmit these peaks without distortion, the transmitter's High-Power Amplifier (HPA) must operate in its linear region, requiring a large power back-off. This leads to:
+*   **Low Power Efficiency**: The transmitter consumes significantly more DC power, reducing the battery life of mobile terminals and increasing energy costs for base stations.
+*   **Non-linear Distortions**: If the signal peaks exceed the amplifier's linear range, it clips the signal, introducing in-band distortion (degrading the Bit Error Rate) and out-of-band emissions (causing interference to adjacent channels).
 
 ---
 
-## Planned Chapters *(to be added)*
+## Machine Learning for PAPR Reduction
 
-| # | Chapter | Topic |
-|---|---|---|
-| 3 | `04_NN_SCF` | Neural Network Signal Cancellation Framework |
-| 4 | `05_GA_SLM` | Genetic Algorithm-Optimised SLM |
-| 5 | `06_ESLM_AE` | Extended SLM via Autoencoder (Hao et al., 2019) |
-| 6 | `07_PR_DUN` | PAPR Reduction via Deep Unfolding Networks |
-| 7 | `08_DL_AE_CO_OFDM` | Deep Learning Autoencoder for Coherent Optical OFDM |
-| 8 | `09_Comparative_Analysis` | Side-by-side comparison of all ML methods |
-| 9 | `10_Future_Directions` | Open problems and research outlook |
+Classical PAPR reduction techniques (such as clipping & filtering, selective mapping, tone reservation, and partial transmit sequence) often suffer from significant limitations, including high computational complexity, spectral efficiency loss from transmitting side information, or high distortion.
+
+Machine learning offers a paradigm shift in addressing these issues:
+*   **End-to-End Optimization**: Deep learning architectures can treat the transmitter, channel, and receiver as a joint optimization problem, learning constellation mappings and pre-distortions that inherently exhibit low PAPR while maintaining low reconstruction error (BER).
+*   **Low Execution Latency**: Once trained, forward passes through neural network models require simple matrix multiplications, which can be executed very rapidly on hardware, bypassing the exhaustive searches or iterative solvers required by classical methods.
+*   **Eliminating Side Information**: ML models can learn to compress or pre-distort waveforms in a way that allows the receiver to decode the signal without requiring additional control or side information bits.
 
 ---
 
-## Repository Structure
+## Development Status
 
-```
-Graduation Project 2/
-│
-├── Thesis/                         # LaTeX thesis source
-│   ├── Thesis.tex                  # Master document
-│   ├── Preamble.tex                # Packages, styles, custom environments
-│   ├── References.bib              # BibLaTeX bibliography
-│   ├── Figures/                    # All figures (logo, plots, diagrams)
-│   ├── Chapters/
-│   │   ├── 00a_Nomenclature.tex
-│   │   ├── 00b_Mathematical_Symbols.tex
-│   │   ├── 01_OFDM_SLM_Refresher.tex
-│   │   ├── 03_PRNet.tex
-│   │   └── ...                     # Future chapters
-│   └── Appendices/
-│       ├── A_Consolidated_Parameters.tex
-│       └── B_DL_Glossary.tex
-│
-├── Codes/                          # Python simulation scripts
-│   └── ...
-│
-├── References/                     # Downloaded papers & resources
-│   └── ...
-│
-├── ML-Enhanced SLM/               # Supplementary material / earlier drafts
-│   └── ...
-│
-├── .gitignore
-└── README.md
-```
-
----
-
-## Compiling the Thesis
-
-The thesis uses **LuaLaTeX** (required for `fontspec` / OpenType fonts) and **Biber** for bibliography management.
-
-**Recommended compile sequence:**
-```bash
-cd Thesis
-lualatex Thesis.tex
-biber Thesis
-lualatex Thesis.tex
-lualatex Thesis.tex
-```
-
-Or with `latexmk`:
-```bash
-cd Thesis
-latexmk -lualatex Thesis.tex
-```
-
-**Required fonts** (must be installed on the system):
-- `Source Serif 4` — main body font
-- `JetBrains Mono` — monospace / code font
-
----
-
-## Key References
-
-- **Kim, K. et al. (2017).** *Deep Learning-Based PAPR Reduction Method for OFDM Systems.* — PRNet.
-- **Hao, Z. et al. (2019).** *Extended SLM Autoencoder for PAPR Reduction.*
-- **Alnaseri, A. et al. (2025).** *Deep Learning Autoencoder for CO-OFDM.*
-- **Zou, X. et al. (2021).** *Neural Network Signal Cancellation Framework.*
+This repository serves as the development and collaboration space for our team. Various machine learning architectures, training datasets, and system simulations will be added as different components of the project are implemented and integrated.
 
 ---
 

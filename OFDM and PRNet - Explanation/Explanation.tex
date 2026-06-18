@@ -11,6 +11,7 @@
 % ==============================================================================
 \documentclass[11pt, a4paper, twoside, openright]{book}
 
+
 % ==============================================================================
 % LOAD PREAMBLE (packages, styles, environments, metadata commands)
 % ==============================================================================
@@ -205,6 +206,13 @@ sessions, the laughter, and the moral support that carried us through.
 \listoftables
 \clearpage
 
+% ------------------------------------------------------------------------------
+% NOMENCLATURE & MATHEMATICAL SYMBOLS
+% ------------------------------------------------------------------------------
+\input{Chapters/00a_Nomenclature}
+\input{Chapters/00b_Mathematical_Symbols}
+\clearpage
+
 % ==============================================================================
 % MAIN MATTER  (arabic page numbers; "thesis" page style — running heads ON)
 % ==============================================================================
@@ -215,14 +223,14 @@ sessions, the laughter, and the moral support that carried us through.
 % ==============================================================================
 % CHAPTERS
 % ==============================================================================
-\input{Chapters/01_OFDM_and_PAPR}      % Ch. 1 — OFDM & Classical PAPR Reduction
-\input{Chapters/02_PRNet}               % Ch. 2 — PRNet (Deep Autoencoder)
+\input{Chapters/01_OFDM_SLM_Refresher}     % Ch. 1 — OFDM & SLM Refresher
+\input{Chapters/02_PRNet}                   % Ch. 2 — PRNet (Deep Autoencoder)
 
 % ==============================================================================
 % APPENDICES
 % ==============================================================================
 \appendix
-\input{Appendices/A_Simulation_Parameters}
+\input{Appendices/A_Consolidated_Parameters}
 \input{Appendices/B_DL_Glossary}
 
 % ==============================================================================

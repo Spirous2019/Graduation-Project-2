@@ -62,6 +62,12 @@
 \definecolor{motivationBg}      {HTML}{EEF2FF}
 \definecolor{insightColor}      {HTML}{0D9488}   % Teal
 \definecolor{insightBg}         {HTML}{F0FDFA}
+\definecolor{misconceptionColor}{HTML}{E11D48}   % Rose
+\definecolor{misconceptionBg}   {HTML}{FFF1F2}
+\definecolor{exampleColor}      {HTML}{D97706}   % Amber
+\definecolor{exampleBg}         {HTML}{FFFBEB}
+\definecolor{codeNarrativeColor}{HTML}{7C3AED}   % Violet
+\definecolor{codeNarrativeBg}   {HTML}{F5F3FF}
 
 % Code listing syntax colors (One Dark theme)
 \definecolor{codeListingBg}     {HTML}{F6F8FA}
@@ -108,6 +114,9 @@
 
 % ==============================================================================
 % 7. PAGE STYLES  (headers & footers)
+%
+%    "thesis"  -- used in \mainmatter for all chapter pages
+%    "plain"   -- used automatically on chapter-opening pages; also front matter
 % ==============================================================================
 
 % PLAIN style: page number centred in footer, no header
@@ -127,6 +136,7 @@
 
 % Redefine \cleardoublepage so that blank verso pages inserted by
 % twoside/openright are completely empty (no stray page number).
+% Content pages and chapter-opening pages are unaffected.
 \makeatletter
 \renewcommand{\cleardoublepage}{%
     \clearpage
@@ -318,14 +328,29 @@
     }
 }
 
-\newtcolorbox{motivation}[1][]{%
+\newtcolorbox{motivation}[1][Chapter Motivation]{%
     blockbase = motivationColor,
     colback   = motivationBg,
     title     = {#1}}
 
-\newtcolorbox{keyinsight}[1][]{%
+\newtcolorbox{keyinsight}[1][Key Insight]{%
     blockbase = insightColor,
     colback   = insightBg,
+    title     = {#1}}
+
+\newtcolorbox{misconception}[1][Common Misconception]{%
+    blockbase = misconceptionColor,
+    colback   = misconceptionBg,
+    title     = {#1}}
+
+\newtcolorbox{workingexample}[1][Working Example]{%
+    blockbase = exampleColor,
+    colback   = exampleBg,
+    title     = {#1}}
+
+\newtcolorbox{codenarrative}[1][Code Walkthrough]{%
+    blockbase = codeNarrativeColor,
+    colback   = codeNarrativeBg,
     title     = {#1}}
 
 % Key Result block — black pill badge, equation tag suppressed inline

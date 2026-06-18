@@ -25,6 +25,19 @@ is the efficient realisation of modulation and demodulation via the Inverse Fast
 Fourier Transform (IFFT) and Fast Fourier Transform (FFT),
 respectively.
 
+Before going further, a critical terminology distinction must be established.
+The word ``symbol'' is overloaded in OFDM systems:
+\begin{itemize}
+    \item A \textbf{data symbol} (or constellation symbol) is a single complex
+          number on one subcarrier---for example, one QPSK point such as
+          $0.707+j\,0.707$.
+    \item An \textbf{OFDM symbol} is the entire composite block: it is the
+          collection of \emph{all} $N$ data symbols, packed together and
+          transformed by the IFFT into an array of $N$ time-domain samples.
+\end{itemize}
+So when we say ``one OFDM symbol,'' we mean a \emph{package} containing all
+$N$ data symbols running in parallel---not a single sample.
+
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.70\linewidth]{Figures/OFDM_Refresher/ofdm_block_diagram.png}
@@ -42,18 +55,45 @@ Let the frequency-domain data symbol vector after constellation mapping be
 \begin{equation*}
     \bm{X} = \bigl[X_0,\; X_1,\; \dots,\; X_{N-1}\bigr]^T,
 \end{equation*}
-where $X_k$ is the complex symbol transmitted on the $k$-th subcarrier and
+where $X_k$ is the complex data symbol transmitted on the $k$-th subcarrier and
 $N$ is the total number of subcarriers.  The time-domain OFDM signal is
 obtained by applying the $N$-point IFFT:
 \begin{keyresult}
 \begin{equation}
     x(n) = \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} X_k \, e^{\,j2\pi kn/N},
     \qquad n = 0,\, 1,\, \dots,\, N-1.
+    \label{eq:ifft}
 \end{equation}
 \end{keyresult}
 
-\begin{keyinsight}
-    The $1/\!\sqrt{N}$ normalization is a matter of convention.
+This equation is the heart of OFDM, and it is essential to read it precisely.
+The IFFT takes \textbf{$N$ frequency-domain inputs} (the data symbols
+$X_0, X_1, \dots, X_{N-1}$) and produces \textbf{$N$ time-domain outputs}
+(the samples $x(0), x(1), \dots, x(N-1)$).  These $N$ output samples,
+taken together as an array, constitute one complete OFDM symbol.
+
+\begin{keyinsight}[Every Time Sample Depends on Every Subcarrier]
+    The summation $\sum_{k=0}^{N-1}$ in Eq.~\eqref{eq:ifft} is the most
+    important detail to grasp.  It means that to calculate any \emph{single}
+    time-domain sample $x(n)$, the IFFT adds up the contributions from
+    \emph{all $N$ subcarriers}.  Sample $x(0)$ is not produced by subcarrier
+    $0$ alone, and sample $x(5)$ is not produced by subcarrier $5$ alone.
+    Every single sample is the sum of all $N$ subcarrier values, each weighted
+    by a different complex exponential.  This fact---that all subcarriers
+    overlap and add together in every time sample---is exactly what creates the
+    PAPR problem, as explained in Section~\ref{sec:papr_def}.
+\end{keyinsight}
+
+The flow is therefore as follows:
+\begin{enumerate}
+    \item A stream of constellation symbols (e.g.\ QPSK) enters the system.
+    \item The serial-to-parallel converter groups them into chunks of $N$.
+    \item Each chunk of $N$ data symbols is fed into the $N$-point IFFT.
+    \item The IFFT outputs $N$ time-domain samples---this is one OFDM symbol.
+\end{enumerate}
+
+\begin{keyinsight}[Normalization Convention]
+    The $1/\!\sqrt{N}$ factor is a convention.
     Some references use $1/N$ instead.
     Throughout this document we adopt the $1/\!\sqrt{N}$ form
     so that the signal energy is preserved between the frequency and
@@ -106,14 +146,15 @@ interference.
 
 % ----------------------------------------------------------------------------
 \section{PAPR: Definition and Significance}
+\label{sec:papr_def}
 % ----------------------------------------------------------------------------
 
 \subsection{Formal Definition}
 
-Because the time-domain OFDM signal --- the sum of $N$ independently modulated
-complex exponentials --- can occasionally see all subcarrier contributions align
-constructively, large amplitude peaks appear.  The severity of this peaking is
-quantified by the
+As established in the previous section, each time-domain sample $x(n)$ is the
+sum of \emph{all} $N$ subcarrier contributions.  When these contributions
+happen to align constructively at a particular sample index, a large amplitude
+spike appears.  The severity of this peaking is quantified by the
 \textbf{Peak-to-Average Power Ratio (PAPR)}:
 \begin{keyresult}
 \begin{equation}
@@ -122,13 +163,55 @@ quantified by the
            {E\Bigl[\bigl|x(n)\bigr|^{2}\Bigr]},
 \end{equation}
 \end{keyresult}
-where the numerator is the peak instantaneous power and the denominator is the
-average (expected) power of the OFDM symbol.
+where the numerator is the peak instantaneous power (the largest
+$|x(n)|^2$ in the array of $N$ time-domain samples) and the denominator is the
+average power across all $N$ samples of the OFDM symbol.
+
+\subsection{Why PAPR Occurs: Constructive Summation}
+
+The PAPR problem is a direct consequence of the summation sign in the IFFT
+equation.  To see why concretely, consider the first time-domain sample,
+$x(0)$.  Setting $n = 0$ in Eq.~\eqref{eq:ifft}, the complex exponential
+becomes $e^{j2\pi k \cdot 0 / N} = e^0 = 1$ for every subcarrier $k$.  So:
+\begin{equation*}
+    x(0) = \frac{1}{\sqrt{N}} \bigl(X_0 + X_1 + X_2 + \cdots + X_{N-1}\bigr).
+\end{equation*}
+The first time-domain sample is literally the \emph{sum of all $N$ data
+symbols}.  Now consider what happens if, by the chance arrangement of the
+input bit stream, all $N$ data symbols happen to be the same QPSK point---say,
+$X_k = 1$ for all $k$.  Then:
+\begin{equation*}
+    x(0) = \frac{1}{\sqrt{N}} \cdot N = \sqrt{N}.
+\end{equation*}
+For $N = 64$, $x(0) = 8$.  The peak power at this single sample is
+$|x(0)|^2 = 64$, while the average power of a unit-energy QPSK symbol
+is~1.  This gives $\mathrm{PAPR} = 64$, or
+$10\log_{10}(64) = 18$~dB---a massive voltage spike that would saturate
+any practical power amplifier.
+
+More generally, at any sample index $n$, the complex exponential weights
+$e^{j2\pi kn/N}$ rotate each subcarrier's contribution by a different phase
+angle.  Most of the time these rotations cause the contributions to partly
+cancel, keeping $|x(n)|$ moderate.  But for certain combinations of data
+symbols, the rotated contributions can align constructively at some particular
+sample index $n^*$, producing a large spike in $|x(n^*)|$ while the rest of
+the array remains small---hence a high ratio of peak to average power.
+
+\begin{keyinsight}[The Root Cause of PAPR]
+    PAPR arises because the IFFT \emph{adds all $N$ subcarrier contributions
+    together} to form each time-domain sample.  The subcarriers are
+    independent in the frequency domain, but they share the same time
+    interval and stack on top of each other.  When the phases of the data
+    symbols are such that many subcarrier waves reach their peaks
+    simultaneously at the same sample index, their amplitudes add up to a
+    spike.  This constructive interference is the fundamental, unavoidable
+    mechanism behind high PAPR in OFDM.
+\end{keyinsight}
 
 \begin{workingexample}[Numerical Feel for PAPR]
     For a 128-subcarrier OFDM system with QPSK modulation, the theoretical
     worst-case PAPR is $10\log_{10}(128) \approx 21.1$~dB---this occurs when
-    all 128 subcarriers happen to align in phase at some instant $n$.
+    all 128 subcarriers happen to align in phase at some sample index $n$.
     In practice, such perfect alignment is extremely rare; the typical PAPR
     at a CCDF of $10^{-2}$ is around 10--12~dB.
     Even so, this is far too high for efficient power amplifier operation.

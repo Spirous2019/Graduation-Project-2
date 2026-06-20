@@ -23,25 +23,21 @@ Orthogonal Frequency-Division Multiplexing divides a wideband channel into $N$ n
 
 Let the frequency-domain data symbol vector after constellation mapping be
 \begin{equation*}
-    \bm{X} = \bigl[X[0],\; X[1],\; \dots,\; X[N-1]\bigr]^T,
+    \bm{X} = \bigl[X_0,\; X_1,\; \dots,\; X_{N-1}\bigr]^T,
 \end{equation*}
-where $X[k]$ is the complex data symbol mapped to the $k$-th subcarrier and $N$ is the total number of subcarriers.
+where $X_k$ is the complex data symbol mapped to the $k$-th subcarrier and $N$ is the total number of subcarriers.
 
 The time-domain OFDM signal is obtained by applying the $N$-point IFFT:
-\begin{keyresult}
-    \begin{equation}
-        x[n] = \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} X[k] \, e^{\,j2\pi kn/N},
-        \qquad n = 0,\, 1,\, \dots,\, N-1.
-    \end{equation}
-\end{keyresult}
+\begin{equation*}
+    x[n] = \frac{1}{\sqrt{N}} \sum_{k=0}^{N-1} X_k \, e^{\,j2\pi kn/N},
+    \qquad n = 0,\, 1,\, \dots,\, N-1.
+\end{equation*}
 
 At the receiver, the original frequency-domain symbols are recovered by the complementary FFT operation:
-\begin{keyresult}
-    \begin{equation}
-        X[k] = \frac{1}{\sqrt{N}} \sum_{n=0}^{N-1} x[n] \, e^{-\,j2\pi kn/N},
-        \qquad k = 0,\, 1,\, \dots,\, N-1.
-    \end{equation}
-\end{keyresult}
+\begin{equation*}
+    X_k = \frac{1}{\sqrt{N}} \sum_{n=0}^{N-1} x[n] \, e^{-\,j2\pi kn/N},
+    \qquad k = 0,\, 1,\, \dots,\, N-1.
+\end{equation*}
 
 The symmetric $1/\!\sqrt{N}$ normalization used in both of these transforms preserves signal energy between the frequency and time domains (Parseval's theorem).
 
@@ -61,13 +57,11 @@ Before transmission over the wireless channel, a \textbf{Cyclic Prefix (CP)} of 
 \subsection{Definition}
 
 The time-domain OFDM signal is the superposition of $N$ independently modulated complex exponentials. When these subcarrier contributions align constructively at certain time instants, large amplitude peaks occur. The severity of this phenomenon is quantified by the \textbf{Peak-to-Average Power Ratio (PAPR)}:
-\begin{keyresult}
-    \begin{equation}
-        \mathrm{PAPR}\bigl(\bm{x}\bigr)
-        = \frac{\displaystyle\max_{0 \le n \le N-1}\bigl|x[n]\bigr|^{2}}
-        {E\Bigl[\bigl|x[n]\bigr|^{2}\Bigr]}.
-    \end{equation}
-\end{keyresult}
+\begin{equation*}
+    \mathrm{PAPR}\bigl(\bm{x}\bigr)
+    = \frac{\displaystyle\max_{0 \le n \le N-1}\bigl|x[n]\bigr|^{2}}
+    {E\Bigl[\bigl|x[n]\bigr|^{2}\Bigr]}.
+\end{equation*}
 In this formulation, the numerator represents the peak instantaneous power and the denominator represents the average power of the OFDM symbol. The theoretical worst-case PAPR for $N$ subcarriers is $10\log_{10}(N)$~dB, which occurs when all subcarriers align perfectly in phase.
 
 \subsection{CCDF Performance Metric}
@@ -78,12 +72,10 @@ Since PAPR varies from one OFDM symbol to the next, it is characterised statisti
     = \Pr\bigl(\mathrm{PAPR} > \mathrm{PAPR}_0\bigr),
 \end{equation*}
 where $\mathrm{PAPR}_0$ is a given threshold. For $N$ subcarriers with independent, identically distributed symbols and Nyquist-rate sampling, the CCDF can be approximated as:
-\begin{keyresult}
-    \begin{equation}
-        \Pr\bigl(\mathrm{PAPR} \ge \mathrm{PAPR}_0\bigr)
-        \approx 1 - \bigl(1 - e^{-\mathrm{PAPR}_0}\bigr)^{N}.
-    \end{equation}
-\end{keyresult}
+\begin{equation*}
+    \Pr\bigl(\mathrm{PAPR} \ge \mathrm{PAPR}_0\bigr)
+    \approx 1 - \bigl(1 - e^{-\mathrm{PAPR}_0}\bigr)^{N}.
+\end{equation*}
 
 A PAPR reduction technique shifts the CCDF curve to the left, indicating that high-PAPR events become statistically less likely.
 

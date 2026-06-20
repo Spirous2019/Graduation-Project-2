@@ -4,206 +4,100 @@
 \chapter{PRNet: PAPR Reduction via Deep Autoencoder}
 \label{ch:prnet}
 
-The limitations of classical SLM identified in Chapter~\ref{ch:ofdm_papr} --- computational complexity, side information overhead, and blind detection difficulty --- motivate a fundamentally different approach.  Rather than searching over a fixed set of phase sequences, Kim et al.~\cite{kim2017novel} proposed the \textbf{PAPR Reduction Network (PRNet)}, the first deep learning-based system for joint PAPR and BER optimisation in OFDM.  PRNet treats the transmitter--channel--receiver chain as a single deep autoencoder: the encoder learns a data-dependent constellation mapping that jointly minimises reconstruction error and PAPR, while the decoder learns the corresponding inverse mapping, eliminating the need for side information.
-
+The fundamental limitations of the classical PAPR reduction approaches identified in Chapter~\ref{ch:ofdm_papr} motivate a paradigm shift in transceiver design. Rather than relying on rigid algorithmic searches or intentional signal distortion, Kim et al.~\cite{kim2017novel} proposed the \textbf{PAPR Reduction Network (PRNet)}, the first deep learning-based system for joint PAPR and BER optimisation in OFDM. PRNet treats the transmitter--channel--receiver chain as a single deep autoencoder: the encoder learns a data-dependent constellation mapping that jointly minimises reconstruction error and PAPR, while the decoder learns the corresponding inverse mapping, fundamentally bypassing the computational and signaling bottlenecks of classical methods.
 
 % ============================================================================
 \section{Autoencoder Framework}
 \label{sec:autoencoder_framework}
 % ============================================================================
 
-\subsection{Communication System as Autoencoder}
+In a traditional communication system, the transmitter transforms raw data into a physical signal through a rigid sequence of fixed mathematical operations, which the receiver attempts to run in reverse after the signal is distorted by the wireless channel. This physical reality maps perfectly onto the architecture of a deep learning \textbf{autoencoder}~\cite{kim2017novel}. In this framework, the neural network's \emph{encoder} acts as the transmitter, the \emph{decoder} acts as the receiver, and the mathematical layer connecting them acts as the noisy wireless channel. By placing a mathematical simulation of the channel directly between the encoder and decoder, the entire communication chain becomes a single, unified neural network.
 
-In any communication system, the transmitter transforms raw data into a signal suitable for the channel, and the receiver undoes that transformation to recover the original data.  This structure maps directly onto the autoencoder paradigm~\cite{kim2017novel}: the encoder corresponds to the transmitter, the bottleneck corresponds to the physical channel (which adds noise and distortion), and the decoder corresponds to the receiver.
+The profound advantage of this unified architecture is that it enables \textbf{end-to-end joint training}. Rather than optimising the transmitter and receiver as isolated digital signal processing blocks, PRNet optimises them simultaneously. This allows the network to dynamically learn a custom, data-dependent constellation mapping at the encoder that directly minimises both the reconstruction error (BER) and the peak power (PAPR), while the decoder simultaneously learns the exact inverse mapping required to recover the data despite physical channel impairments~\cite{kim2017novel}.
 
-The key insight of PRNet is that if both the transmitter and receiver are designed as jointly trained neural networks with the channel model placed between them, the system can be trained end-to-end to minimise any differentiable objective --- including PAPR~\cite{kim2017novel}.
+To realise this, PRNet integrates two trainable Deep Neural Networks (DNNs) into the communication chain. At the transmitter, the encoder DNN is placed before the IFFT, replacing the standard constellation mapper. Instead of mapping each symbol to a fixed constellation point independently, the encoder employs a fully connected structure where every output subcarrier value is a function of the \emph{entire} input block. By processing all subcarriers jointly, the encoder detects input patterns that produce high PAPR and compensates by adjusting all subcarrier amplitudes and phases to generate low-peak waveforms~\cite{kim2017novel}.
 
-
-\subsection{PRNet Architecture Overview}
-
-PRNet inserts two trainable Deep Neural Networks (DNNs) around the standard IFFT/FFT pair~\cite{kim2017novel}.  The \textbf{encoder} (transmitter-side DNN) replaces the standard constellation mapper: instead of mapping bits to fixed QPSK or QAM points, it produces complex subcarrier values specifically shaped to yield low peaks after the IFFT.  The \textbf{decoder} (receiver-side DNN) replaces the standard constellation de-mapper and directly reconstructs the original data from the received noisy frequency-domain subcarriers.
-
-It is important to note that the IFFT and FFT remain fixed, standard mathematical operations within the PRNet pipeline.  The encoder replaces the constellation mapper, not the IFFT itself~\cite{kim2017novel}.
+At the receiver, the decoder DNN is placed after the FFT to replace the standard constellation de-mapper. Mirroring the transmitter, it employs a fully connected structure to process the received OFDM block jointly. Due to joint training, the decoder's weights implicitly encode the encoder's mapping. Consequently, it reconstructs the original data from the equalised frequency-domain subcarriers without explicit side information, eliminating both the bandwidth overhead and severe failure modes associated with SI errors in classical methods~\cite{kim2017novel}.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.95\linewidth]{Figures/PRNet/prnet_architecture.png}
-    \caption{Structure of the PRNet system with DNN encoder and DNN decoder. Both consist of fully connected (FC) layers with Batch Normalization and ReLU activation.  The encoder shapes the constellation before the IFFT to reduce PAPR; the decoder reconstructs the transmitted symbols after the channel and FFT. Reproduced from~\cite{kim2017novel}.}
+    \caption{Structure of the PRNet system with DNN encoder and DNN decoder. Both consist of fully connected (FC) layers with Batch Normalization and ReLU activation. The encoder shapes the constellation before the IFFT to reduce PAPR; the decoder reconstructs the transmitted symbols after the channel and FFT~\cite{kim2017novel}.}
     \label{fig:prnet_architecture}
 \end{figure}
 
-Because the encoder and decoder are trained jointly over the full training process, the decoder's weights implicitly encode the complete knowledge of the encoder's mapping.  No explicit side information is transmitted between transmitter and receiver, eliminating both the bandwidth overhead and the catastrophic failure mode associated with SI errors in classical SLM~\cite{kim2017novel}.
+\subsection{Core Neural Network Components}
 
+Internally, both the encoder and decoder are constructed from identical repeated sub-blocks~\cite{kim2017novel}. Each sub-block consists of three fundamental deep learning operations applied in sequence:
 
-\subsection{Joint Subcarrier Processing}
-
-In standard OFDM with QPSK, the constellation mapping is performed independently per subcarrier: each pair of bits maps to one of four fixed points.  PRNet fundamentally changes this by employing a fully connected encoder, where every output subcarrier value is a function of the \emph{entire} input block.  This holistic processing enables the encoder to detect input patterns that would produce high PAPR under standard mapping and to compensate by adjusting all subcarrier amplitudes and phases jointly~\cite{kim2017novel}.
-
+\begin{itemize}
+    \item \textbf{Fully Connected (FC) Layer:} Unlike standard OFDM where each subcarrier is mapped independently, the FC layers apply a linear transformation that combines the entire input vector. This dense connectivity enables the network to process all subcarriers jointly, recognising block-wide patterns that cause high PAPR and adjusting all subcarrier phases and amplitudes simultaneously.
+    \item \textbf{Batch Normalization (BN):} Inserted after the linear transformations, BN standardises the intermediate constellation representations across each training batch. This stabilisation is critical for PRNet, as it prevents vanishing gradients and allows the network to converge on a highly complex, multidimensional constellation mapping without training collapse.
+    \item \textbf{ReLU Activation:} The Rectified Linear Unit provides the essential nonlinearity. Without it, the entire multi-layer network would collapse into a single linear matrix projection, which is mathematically insufficient to discover the highly non-convex mappings required to jointly minimise PAPR and BER.
+\end{itemize}
 
 % ============================================================================
 \section{System Model}
 \label{sec:system_model}
 % ============================================================================
 
-The complete PRNet signal chain can be expressed as~\cite{kim2017novel}:
-\begin{keyresult}
-\begin{equation}
-    \hat{\bm{r}}
-    = g \circ \mathrm{FFT} \circ \mathbb{H} \circ \mathrm{IFFT}
-      \circ f(\bm{r}),
-\end{equation}
-\end{keyresult}
-where $f$ denotes the encoder, $g$ denotes the decoder, $\mathbb{H}$ represents the channel, and $\bm{r}$ and $\hat{\bm{r}}$ are the input and reconstructed output vectors, respectively.  The following subsections describe each stage.
-
+With the core neural network components established, we now formulate the PRNet transceiver as an end-to-end OFDM communication system~\cite{kim2017novel}. The system is mathematically defined for $N$ orthogonal subcarriers and an input sequence of $M$-bit symbols. For training and evaluation, we adopt the baseline configuration from Kim et al.~\cite{kim2017novel}, specifically $N = 64$ subcarriers and QPSK modulation ($M = 2$).
 
 \subsection{Input Representation}
 
-The system considers $N = 64$ subcarriers with QPSK modulation ($M = 4$ constellation points per subcarrier), yielding $N \times \log_2 M = 128$ bits per OFDM symbol~\cite{kim2017novel}.  The symbol index for each subcarrier is $r_k \in \{0, 1, 2, 3\}$, and the full input vector is $\bm{r} = [r_0,\, r_1,\, \dots,\, r_{N-1}]^T$.
-
-In the neural network implementation, each symbol index $r_k$ is represented as a one-hot vector of length $M = 4$, and these vectors are concatenated to form the network input~\cite{kim2017novel}:
+The original PRNet formulation~\cite{kim2017novel} maps input sequences using $256$-dimensional one-hot encoded vectors. This work replaces this categorical approach with a continuous real-valued in-phase and quadrature (I/Q) representation. Because standard deep neural networks operate exclusively in the real domain, they cannot process complex-valued OFDM symbols natively. To construct the necessary real-valued input, the $64$ complex data symbols (each representing $2$ bits) are explicitly decomposed into their in-phase ($I$) and quadrature ($Q$) components. The input sequence is thus defined as the $128$-dimensional real-valued vector:
 \begin{equation*}
-    \bm{r}_{\mathrm{input}} \in \mathbb{R}^{NM} = \mathbb{R}^{256}.
+    \bm{r} = [I_0,\, Q_0,\, I_1,\, Q_1,\, \dots,\, I_{N-1},\, Q_{N-1}]^T \in \mathbb{R}^{2N}.
 \end{equation*}
-One-hot encoding ensures that the network treats each symbol index as an independent category without imposing a spurious ordinal relationship~\cite{kim2017novel}.
 
+While mathematically equivalent to the one-hot formulation in achieving optimal BER and PAPR, the continuous I/Q parameterization is adopted to provide three strict architectural advantages. First, it reduces the input dimension from $256$ to $128$, strictly halving the parameter complexity of the initial projection matrix. Second, bypassing categorical encoding eliminates discrete mapping layers, allowing the network to optimize continuous physical coordinate geometry directly. Finally, it enables explicit per-symbol power normalization during the forward pass. This guarantees the strict physical constraint $\mathbb{E}[|X|^2] = 1$ for every individual transmitted waveform, overcoming the reliance on global batch-wide statistical approximations.
 
-\subsection{Encoder: Learned Constellation Shaping}
+\subsection{DNN Encoder}
 
-The encoder is a deep neural network that maps the one-hot input vector $\bm{r}_{\mathrm{input}} \in \mathbb{R}^{NM}$ to a vector of $2N = 128$ real numbers representing the real and imaginary parts of $N$ complex subcarrier values~\cite{kim2017novel}:
+The transmitter is parameterized by the deep neural network $f(\cdot; \theta_f)$, where $\theta_f$ denotes the complete set of trainable weights and biases. The encoder follows a topology of $L_f = 5$ consecutive hidden layers, each with a width of 2048 nodes~\cite{kim2017novel}. Crucially, its final output layer is a pure linear projection with no non-linear activation or batch normalisation~\cite{kim2017novel}. This is physically necessary because the network must map symbols to unconstrained coordinates on the complex I/Q plane, which inherently requires the ability to output unbounded negative and positive spatial values.
+
+The encoder maps the real-valued input vector $\bm{r}$ directly to a frequency-domain vector representing the generated complex constellation points:
 \begin{equation*}
-    f(\bm{r};\,\theta_f) \in \mathbb{R}^{2N},
+    \bm{X} = f(\bm{r};\,\theta_f) = \left[X_0,\, X_1,\, \dots,\, X_{N-1}\right]^T \in \mathbb{C}^N.
 \end{equation*}
-where $\theta_f$ denotes all learnable weights and biases.  The \textbf{unstacking operator} $\mathcal{C}(\cdot) : \mathbb{R}^{2N} \to \mathbb{C}^{N}$ converts these to complex symbols:
-\begin{equation*}
-    \bm{X}_{\mathrm{enc}} = \mathcal{C}\bigl(f(\bm{r};\,\theta_f)\bigr)
-    \in \mathbb{C}^{N},
-\end{equation*}
-where the $k$-th encoded symbol is $X_{\mathrm{enc},k} = f(\bm{r})_{2k} + j \cdot f(\bm{r})_{2k+1}$. These symbols are not constrained to any standard constellation grid; they are continuous-valued complex numbers shaped by the encoder to produce low-PAPR waveforms after the IFFT~\cite{kim2017novel}.
-
 
 \subsection{OFDM Modulation}
 
-The encoded symbols are modulated onto the subcarriers via the standard IFFT~\cite{kim2017novel}:
-\begin{keyresult}
-\begin{equation}
-    x[n] = \sum_{k=0}^{N-1} X_{\mathrm{enc},k}\, e^{\,j2\pi nk/N},
-    \qquad 0 \le n \le N-1.
-\end{equation}
-\end{keyresult}
-This is the standard IFFT operation; the only difference from conventional OFDM is that the input symbols $X_{\mathrm{enc},k}$ are the encoder's learned values rather than fixed constellation points.
+The generated frequency-domain symbols $X_k$ are modulated onto the $N = 64$ orthogonal subcarriers via an Inverse Fast Fourier Transform (IFFT) to produce the discrete time-domain sequence $x[n]$.
 
-For accurate continuous-time PAPR estimation, the frequency-domain vector can be zero-padded from length $N$ to $NL$ before computing an $NL$-point IFFT, where $L$ is the oversampling factor.  With $N = 64$ and $L = 4$, this produces 256 time-domain samples~\cite{kim2017novel}.
+The Peak-to-Average Power Ratio (PAPR) of this time-domain sequence is mathematically defined as the ratio of its maximum instantaneous power to its average power:
+\begin{equation*}
+    \mathrm{PAPR}\{x[n]\} = \frac{\displaystyle\max_{0 \le n \le N-1} |x[n]|^2}{\mathbb{E}[|x[n]|^2]}.
+\end{equation*}
 
+Since standard Nyquist-rate sampling ($L=1$) often fails to capture the true continuous-time peaks, accurate evaluation requires an oversampling factor of $L \ge 4$. In practice, this is executed by zero-padding the frequency-domain vector $\bm{X}$ to length $NL$ before computing the IFFT. This step ensures the discrete digital PAPR reliably bounds the maximum power of the physical analog waveform.
 
 \subsection{Channel Model}
 
-After OFDM modulation, the time-domain signal passes through the wireless channel, modelled as~\cite{kim2017novel}:
+Following the IFFT operation, the time-domain signal is transmitted through a wireless channel before arriving at the receiver. As in the original PRNet formulation~\cite{kim2017novel}, the physical transmission is abstracted using a holistic operator $\mathbb{H}$ that models the combined effects of multipath fading and thermal noise.
+
+\subsection{OFDM Demodulation and Equalization}
+
+At the receiver, OFDM demodulation is executed by applying an $N = 64$-point Fast Fourier Transform (FFT) to convert the received time-domain sequence $y[n]$ back into the frequency-domain symbols $Y_k$.
+
+Following the FFT, the transmission is modeled as a Rayleigh flat-fading environment. Under this model, the received signal on the $k$-th subcarrier is mathematically defined as $Y_k = H_k X_k + E_k$, where $H_k$ represents the complex channel fading coefficient and $E_k$ represents the additive white Gaussian noise (AWGN).
+
+To compensate for the fading effects prior to neural network decoding, Zero-Forcing (ZF) equalization is applied. Assuming perfect Channel State Information (CSI)—meaning the receiver perfectly knows $H_k$—the equalized symbols are obtained by dividing the received signal by the channel coefficient:
 \begin{equation*}
-    \bm{y} = \mathbb{H}(\bm{x}) + \bm{\epsilon},
-\end{equation*}
-where $\mathbb{H}$ denotes the channel effects (Rayleigh fading~\cite{kim2017novel}) and $\bm{\epsilon}$ is additive white Gaussian noise (AWGN).
-
-From the neural network's perspective, the channel is a fixed mathematical function within the computation graph.  During training, the channel is simulated by generating random noise and fading coefficients.  Since these operations (addition, multiplication) are differentiable, gradients from the loss function propagate backward through the channel during backpropagation~\cite{kim2017novel}.
-
-
-\subsection{Decoder}
-
-At the receiver, the FFT recovers the frequency-domain subcarriers:
-\begin{equation*}
-    \bm{Y} = \mathrm{FFT}(\bm{y}) \in \mathbb{C}^{N}.
-\end{equation*}
-The decoder DNN processes these received symbols via the \textbf{stacking operator} $\mathcal{S}(\cdot) : \mathbb{C}^{N} \to \mathbb{R}^{2N}$, which interleaves real and imaginary parts, and produces the reconstructed output~\cite{kim2017novel}:
-\begin{equation*}
-    \hat{\bm{r}} = g\bigl(\mathcal{S}(\bm{Y});\,\theta_g\bigr)
-    \in \mathbb{R}^{NM},
-\end{equation*}
-where $\theta_g$ denotes the decoder's learnable parameters.  The output consists of scores for each possible symbol index; the final decision is made by selecting the index with the largest score for each subcarrier.
-
-
-\subsection{Signal Dimension Summary}
-
-\begin{table}[H]
-    \centering
-    \caption{Summary of PRNet signal dimensions for the one-hot formulation~\cite{kim2017novel}.}
-    \label{tab:prnet_shapes}
-    \begin{tabular}{@{} l l l @{}}
-        \toprule
-        \textbf{Symbol} & \textbf{Domain / Shape} & \textbf{Meaning} \\
-        \midrule
-        $\bm{r}$              & $\mathbb{R}^{NM}$ ($256$)
-            & One-hot encoded input \\
-        $f(\bm{r})$           & $\mathbb{R}^{2N}$ ($128$)
-            & Encoder output (stacked I/Q) \\
-        $\bm{X}_{\mathrm{enc}}$ & $\mathbb{C}^{N}$ ($64$)
-            & Encoded complex subcarrier symbols \\
-        $x[n]$                & $\mathbb{C}^{NL}$ ($64L$)
-            & IFFT output (time-domain waveform) \\
-        $\bm{y}$              & $\mathbb{C}^{NL}$ ($64L$)
-            & Received signal (after channel) \\
-        $\bm{Y}$              & $\mathbb{C}^{N}$ ($64$)
-            & FFT output (received subcarriers) \\
-        $\hat{\bm{r}}$        & $\mathbb{R}^{NM}$ ($256$)
-            & Decoder output (reconstructed scores) \\
-        \bottomrule
-    \end{tabular}
-\end{table}
-
-
-% ============================================================================
-\section{Network Architecture}
-\label{sec:network_architecture}
-% ============================================================================
-
-Both the encoder and decoder are constructed from repeated sub-blocks, each consisting of a Fully Connected (FC) layer, Batch Normalization (BN), and ReLU activation, applied in sequence~\cite{kim2017novel}.
-
-\subsection{Sub-Block Structure}
-
-Each sub-block transforms an input vector $\bm{h}^{(\ell-1)}$ into an output vector $\bm{h}^{(\ell)}$ through three operations:
-
-\textbf{Fully Connected Layer.} A linear transformation $\bm{y}_{\mathrm{FC}} = \bm{W}_m \bm{h}^{(\ell-1)} + \bm{b}_m$, where $\bm{W}_m \in \mathbb{R}^{d_{\mathrm{out}} \times d_{\mathrm{in}}}$ and $\bm{b}_m \in \mathbb{R}^{d_{\mathrm{out}}}$. The hidden layers use $d_{\mathrm{out}} = 2048$ nodes~\cite{kim2017novel}.
-
-\textbf{Batch Normalization.} Normalises the FC output to zero mean and unit variance within each training mini-batch, then applies learnable scale ($\gamma$) and shift ($\beta$) parameters~\cite{kim2017novel}:
-\begin{equation*}
-    |\bm{y}_{\mathrm{FC}}|_{\mathrm{norm}}
-    = \gamma \cdot
-    \frac{\bm{y}_{\mathrm{FC}} - \mathbb{E}[\bm{y}_{\mathrm{FC}}]}
-         {\sqrt{\mathrm{Var}[\bm{y}_{\mathrm{FC}}] + \nu}}
-    + \beta,
-\end{equation*}
-where $\nu = 0.001$ prevents division by zero.  BatchNorm stabilises training and allows the use of higher learning rates.
-
-\textbf{ReLU Activation.} The Rectified Linear Unit $\phi(x) = \max(x, 0)$ provides the nonlinearity essential for the network to learn the complex, non-convex constellation shaping required for PAPR reduction~\cite{kim2017novel}.
-
-The complete sub-block transformation is:
-\begin{equation*}
-    \bm{h}^{(\ell)}
-    = \phi\!\Bigl(
-        \mathrm{BN}\bigl(\bm{W}^{(\ell)}\bm{h}^{(\ell-1)}
-        + \bm{b}^{(\ell)}\bigr)
-    \Bigr),
-    \qquad \phi(\cdot) = \mathrm{ReLU}(\cdot).
+    \hat{Y}_k = \frac{Y_k}{H_k} = X_k + \frac{E_k}{H_k}.
 \end{equation*}
 
+\subsection{DNN Decoder}
 
-\subsection{Encoder and Decoder Topology}
+The receiver is parameterized by the deep neural network $g(\cdot; \theta_g)$, where $\theta_g$ denotes the complete set of trainable weights and biases. The decoder shares a symmetric topology with the encoder, comprising $L_g = 5$ consecutive hidden layers, each with a width of 2048 nodes~\cite{kim2017novel}. Similarly, its final output layer is a pure linear projection with no non-linear activation. This is required to allow the network to reconstruct unconstrained I/Q coordinate values from the noisy equalized signal prior to hard-decision demodulation.
 
-The encoder consists of $L_f = 5$ FC--BN--ReLU sub-blocks~\cite{kim2017novel}:
-\begin{keyresult}
-\begin{equation}
-    f(\bm{r})
-    = \phi_{L_f}\!\Bigl(
-        \bigl|\bm{W}_{L_f}^f\,
-        \phi_{L_f-1}\bigl(\cdots
-            \phi_1\bigl(|\bm{W}_1^f\,\bm{r}
-                        + \bm{b}_1^f|_{\mathrm{norm}}\bigr)
-        \cdots\bigr)
-        + \bm{b}_{L_f}^f\bigr|_{\mathrm{norm}}
-    \Bigr).
-\end{equation}
-\end{keyresult}
+The decoder maps the equalized frequency-domain vector $\hat{\bm{Y}}$ back to the $128$-dimensional real-valued reconstructed sequence $\hat{\bm{r}}$. A hard-decision demodulator is subsequently applied to $\hat{\bm{r}}$ to recover the original transmitted bits.
 
-The decoder has the same topology ($L_g = 5$ sub-blocks) with its own independent set of weights.  The final output layer of each network is a plain FC layer with linear activation (no ReLU), as the outputs must be unconstrained real values~\cite{kim2017novel}.
-
+Consequently, the complete end-to-end reconstructed symbol vector at the receiver can be written as a composite function of the entire transceiver pipeline:
+\begin{equation*}
+    \hat{\bm{r}} = g \circ \mathrm{FFT} \circ \mathbb{H} \circ \mathrm{IFFT} \circ f(\bm{r}),
+\end{equation*}
+where $\mathbb{H}$ abstractly denotes the physical effects of the wireless channel. Since every block in this composite chain is mathematically differentiable, gradients from the training loss function flow backward through the entire system during joint optimization of the encoder and decoder parameters.
 
 % ============================================================================
 \section{Training Methodology}
@@ -212,123 +106,70 @@ The decoder has the same topology ($L_g = 5$ sub-blocks) with its own independen
 
 \subsection{Loss Function}
 
-PRNet optimises two competing objectives simultaneously: reconstruction accuracy (low BER) and peak suppression (low PAPR).  The reconstruction loss measures the Mean Squared Error (MSE) between the original and reconstructed vectors~\cite{kim2017novel}:
-\begin{keyresult}
-\begin{equation}
+PRNet optimises two competing objectives simultaneously: reconstruction accuracy (low BER) and peak suppression (low PAPR). While the original PRNet formulation utilizes Cross-Entropy loss for its categorical one-hot encoded inputs~\cite{kim2017novel}, our continuous I/Q parameterization requires a regression-based loss. Thus, the reconstruction loss is formulated as the Mean Squared Error (MSE) between the original continuous input vector and the reconstructed output vector in the $2N$-dimensional real space:
+\begin{equation*}
     \mathcal{L}_1(\bm{r},\hat{\bm{r}})
-    = \frac{1}{NM}\|\bm{r} - \hat{\bm{r}}\|_2^2
-    = \frac{1}{NM}\sum_{i=0}^{NM-1}\bigl(r_i - \hat{r}_i\bigr)^2.
-\end{equation}
-\end{keyresult}
+    = \frac{1}{2N}\bigl\|\bm{r} - g\bigl(\mathrm{FFT} \circ \mathbb{H} \circ \mathrm{IFFT}\bigl(f(\bm{r}; \theta_f)\bigr); \theta_g\bigr)\bigr\|_2^2
+    = \frac{1}{2N}\sum_{i=0}^{2N-1}\bigl(r_i - \hat{r}_i\bigr)^2.
+\end{equation*}
 
-The PAPR penalty directly measures the peak-to-average power ratio of the time-domain waveform~\cite{kim2017novel}:
-\begin{keyresult}
-\begin{equation}
+The PAPR penalty directly measures the peak-to-average power ratio of the time-domain waveform $x[n]$~\cite{kim2017novel}. To explain how this penalty actually trains the neural network, we mathematically trace $x[n]$ back to its source: the encoder. By expanding $x[n]$ into $\mathrm{IFFT}\bigl(f(\bm{r}; \theta_f)\bigr)$, the formula explicitly shows how the PAPR loss backpropagates through the IFFT block to optimize the encoder's internal weights $\theta_f$:
+\begin{equation*}
     \mathcal{L}_2(\bm{r})
-    = \mathrm{PAPR}\{x[n]\}
+    = \mathrm{PAPR}\bigl\{\mathrm{IFFT}\bigl(f(\bm{r}; \theta_f)\bigr)\bigr\}
     = \frac{\displaystyle\max_{0 \le n \le NL-1} |x[n]|^2}
-           {\displaystyle\frac{1}{NL}\sum_{n=0}^{NL-1}|x[n]|^2}.
-\end{equation}
-\end{keyresult}
+    {\displaystyle\frac{1}{NL}\sum_{n=0}^{NL-1}|x[n]|^2}.
+\end{equation*}
 
-The joint loss function is a weighted combination~\cite{kim2017novel}:
-\begin{keyresult}
-\begin{equation}
+Finally, the complete joint loss function is a weighted combination of both the reconstruction loss and the PAPR penalty~\cite{kim2017novel}:
+\begin{equation*}
     \mathcal{L}(\bm{r},\hat{\bm{r}})
     = \mathcal{L}_1(\bm{r},\hat{\bm{r}}) + \lambda\,\mathcal{L}_2(\bm{r}),
-\end{equation}
-\end{keyresult}
-where $\lambda > 0$ controls the trade-off between reconstruction accuracy and PAPR reduction.  Larger $\lambda$ values produce stronger PAPR reduction at the expense of higher BER.  The paper adopts $\lambda = 0.01$~\cite{kim2017novel}.
-
-\begin{keyinsight}[The BER--PAPR Trade-off]
-    The parameter $\lambda$ governs a fundamental trade-off: more aggressive PAPR reduction requires greater constellation distortion, which degrades the decoder's ability to distinguish between symbol classes.  This trade-off is not a limitation specific to PRNet but a physical constraint of the OFDM system.
-\end{keyinsight}
-
+\end{equation*}
+where $\lambda > 0$ is a weighting hyperparameter that governs the fundamental physical trade-off between reconstruction accuracy and PAPR reduction. A higher $\lambda$ forces the network to aggressively reduce PAPR, but doing so requires distorting the transmitted constellation. This distortion shrinks the minimum distance between adjacent constellation points, which inherently degrades the decoder's ability to safely recover symbols under noise, leading to a higher BER. Therefore, the chosen value of $\lambda$ dictates the balance of this trade-off.
 
 \subsection{Two-Stage Training Procedure}
 
-PRNet employs denoising autoencoder training, where noise at corruption level $\eta$ (noise-to-signal ratio) is injected during training to force the decoder to learn robust decision boundaries~\cite{kim2017novel}:
+To force the decoder to learn robust decision boundaries, Kim et al.\ employ denoising autoencoder training, where artificial noise at a corruption level $\eta$ (the noise-to-signal ratio) is injected during the forward pass (the simulated transmission of the signal through the physical channel before reaching the decoder)~\cite{kim2017novel}:
 \begin{equation*}
     \eta = \frac{\mathbb{E}\bigl[|\epsilon|^2\bigr]}
-                {\mathbb{E}\bigl[|\bm{r}|^2\bigr]}.
+    {\mathbb{E}\bigl[|\bm{r}|^2\bigr]}.
 \end{equation*}
 
-Selecting $\eta$ involves a trade-off: too little noise yields overly tight decision boundaries that fail under real channel conditions, while too much noise prevents the decoder from learning to distinguish adjacent constellation points.  Kim et al.\ employ a two-stage procedure~\cite{kim2017novel}:
+Selecting $\eta$ poses a critical trade-off: insufficient noise yields overly tight decision boundaries that fail in real channels, while excessive noise prevents distinguishing adjacent constellation points. To resolve this and evaluate optimal parameters, Kim et al.\ established a two-stage training procedure~\cite{kim2017novel}:
 
 \begin{enumerate}
-    \item \textbf{Stage~1 --- Corruption level selection:} Train multiple models using only the reconstruction loss $\mathcal{L}_1$ ($\lambda = 0$) for a range of $\eta$ values. Evaluate BER across a full SNR sweep and select the $\eta$ yielding the lowest overall BER.  The paper identifies $\eta^\star = -15$~dB~\cite{kim2017novel}.
+    \item \textbf{Stage~1 --- Corruption level selection:} Multiple models are trained using solely the reconstruction loss $\mathcal{L}_1$ (setting $\lambda = 0$) across a sweeping range of $\eta$ values. The models are evaluated across a full SNR sweep to empirically determine the optimal noise injection level $\eta^\star$, as shown below.
 
-    \item \textbf{Stage~2 --- Joint training:} Fix $\eta = \eta^\star = -15$~dB and train the final model with the full joint loss $\mathcal{L} = \mathcal{L}_1 + \lambda\,\mathcal{L}_2$.
+          \begin{figure}[H]
+              \centering
+              \includegraphics[width=0.55\linewidth]{Figures/PRNet/prnet_ber_corruption.png}
+              \caption{BER of PRNet trained at different corruption levels $\eta$. The model trained at $\eta = -15$~dB consistently yields the lowest BER~\cite{kim2017novel}.}
+              \label{fig:prnet_ber_corruption}
+          \end{figure}
+
+          The authors' results physically validate the noise trade-off: models trained at excessive corruption levels (e.g., $\eta = 0$~dB and $\eta = -5$~dB) fail to learn meaningful boundaries entirely, resulting in flat BER curves. Conversely, models trained at very low corruption levels (e.g., $\eta = -30$~dB) overfit to the noiseless scenario, yielding sub-optimal BER performance under real channel conditions. As the corruption level diverges in either direction from the optimal point, the overall BER steadily increases. Based on these empirical findings, Kim et al.\ conclude that $\eta^\star = -15$~dB strikes the perfect balance~\cite{kim2017novel}.
+
+    \item \textbf{Stage~2 --- Joint training:} The noise injection is fixed at $\eta^\star = -15$~dB, and models are trained using the full joint loss $\mathcal{L} = \mathcal{L}_1 + \lambda\,\mathcal{L}_2$ to investigate how the penalty weight $\lambda$ dictates the trade-off between PAPR reduction and BER degradation, as illustrated below.
+
+          \begin{figure}[H]
+              \centering
+              \includegraphics[width=0.55\linewidth]{Figures/PRNet/prnet_ber_papr_lambda.png}
+              \caption{BER vs.\ average PAPR by varying $\lambda$ at SNR $= 20$~dB. Larger $\lambda$ reduces PAPR but increases BER~\cite{kim2017novel}.}
+              \label{fig:prnet_ber_lambda}
+          \end{figure}
+
+          As established by Kim et al., as $\lambda$ increases, PAPR decreases monotonically while the BER increases, confirming the fundamental physical tension between constellation shaping and minimum distance. Heavy penalties (e.g., $\lambda = 0.1$) aggressively squash the waveform but severely compromise the error rate, whereas minimal penalties (e.g., $\lambda = 0.001$) prioritize a low BER at the expense of higher PAPR. Following this optimization sweep, the authors identified $\lambda = 0.01$ as the ideal practical operating point—striking a balance that achieves meaningful PAPR reduction without severely degrading the BER baseline~\cite{kim2017novel}.
 \end{enumerate}
 
-Stage~1 establishes robust reconstruction capability before Stage~2 introduces the PAPR objective, preventing the encoder from distorting the constellation before the decoder has developed adequate noise-handling foundations.
 
-\begin{algorithm}[H]
-    \DontPrintSemicolon
-    \SetAlgoLined
-    \SetKwInOut{Input}{Input}
-    \SetKwInOut{Output}{Output}
-    \Input{Candidate corruption levels $\{\eta\}$, PAPR weight $\lambda$,
-           steps $T$, batch size $B$}
-    \Output{Trained parameters $(\theta_f,\theta_g)$}
-    \BlankLine
-    \tcp{Stage 1: select $\eta^\star$ using $\lambda=0$}
-    \ForEach{$\eta$ in $\{\eta\}$}{
-        Initialise PRNet parameters $(\theta_f,\theta_g)$\;
-        \For{$t=1$ \KwTo $T$}{
-            Sample a batch of $B$ random QPSK symbol indices $\to \bm{r}$\;
-            Forward pass: $\hat{\bm{r}} \leftarrow
-                \mathrm{PRNet}(\bm{r};\theta_f,\theta_g,\eta)$\;
-            Compute $\mathcal{L}_1(\bm{r},\hat{\bm{r}})$ and update
-                $(\theta_f,\theta_g)$ via Adam\;
-        }
-        Evaluate BER over an SNR sweep and record result for this $\eta$\;
-    }
-    Select $\eta^\star$ that minimises BER\;
-
-    \BlankLine
-    \tcp{Stage 2: joint training at $\eta^\star$}
-    Initialise the final PRNet parameters $(\theta_f,\theta_g)$\;
-    \For{$t=1$ \KwTo $T$}{
-        Sample a batch of $B$ random QPSK symbol indices $\to \bm{r}$\;
-        Forward pass: obtain $\hat{\bm{r}}$ and time-domain $x[n]$\;
-        Compute $\mathcal{L} = \mathcal{L}_1(\bm{r},\hat{\bm{r}})
-            + \lambda\,\mathcal{L}_2(x[n])$\;
-        Update $(\theta_f,\theta_g)$ via Adam on $\nabla\mathcal{L}$\;
-    }
-    \caption{Two-stage PRNet training procedure~\cite{kim2017novel}.}
-    \label{alg:prnet_training}
-\end{algorithm}
-
-
-\subsection{End-to-End Differentiability}
-
-Training requires gradients to flow from the loss function through the decoder, FFT, channel, IFFT, and encoder.  For the AWGN channel ($\bm{y} = \bm{x} + \bm{\epsilon}$), the noise term does not depend on the encoder's parameters, so $\partial\mathcal{L}/\partial\bm{x} = \partial\mathcal{L}/\partial\bm{y}$.  For multiplicative fading channels ($\bm{y} = h\bm{x} + \bm{\epsilon}$), the gradient is scaled by the fading coefficient.  The IFFT and FFT are linear operations whose gradients are their respective transposes.  The $\max$ function in the PAPR loss is differentiable almost everywhere, with gradient equal to 1 at the position of the maximum and 0 elsewhere.  Consequently, gradients propagate cleanly through the entire system~\cite{kim2017novel}.
-
-
+\newpage
 % ============================================================================
-\section{Inference and Deployment}
-\label{sec:inference}
+\section{Simulation}
+\label{sec:simulation}
 % ============================================================================
 
-\subsection{Inference Procedure}
-
-After training, the encoder and decoder weights are frozen.  Inference consists of a single forward pass through the encoder, a standard IFFT for OFDM modulation, transmission over the physical channel, FFT demodulation, and a single forward pass through the decoder.  The encoder is a deterministic function: the same input always produces the same output, with no search, candidate comparison, or trial-and-error involved~\cite{kim2017novel}.
-
-
-\subsection{Generalisation}
-
-The encoder is not a lookup table but an algebraic function (composition of matrix multiplications and ReLU operations) whose parameters were optimised to perform well in general.  During training, the network processes $500{,}000 \times 400 = 200$ million random OFDM symbols, a vanishingly small fraction of the $2^{128} \approx 3.4 \times 10^{38}$ possible input sequences.  The network nevertheless handles all possible inputs through generalisation: it learns the underlying geometric principles of PAPR avoidance rather than memorising specific input--output pairs~\cite{kim2017novel}.
-
-The fully connected architecture produces dense mixing, where each encoded subcarrier depends on the entire input block.  This enables the decoder to exploit a non-standard, globally shaped constellation geometry.  However, this property should not be interpreted as a formal frequency-diversity scheme; the system's robustness to channel effects is limited to the distribution encountered during training~\cite{kim2017novel}.
-
-
-% ============================================================================
-\section{Simulation Results}
-\label{sec:simulation_results}
-% ============================================================================
-
-\subsection{Simulation Setup}
+\subsection{Simulation Parameters}
 
 \begin{table}[H]
     \centering
@@ -336,130 +177,133 @@ The fully connected architecture produces dense mixing, where each encoded subca
     \label{tab:prnet_params}
     \begin{tabularx}{\linewidth}{@{} l X @{}}
         \toprule
-        \textbf{Parameter} & \textbf{Value} \\
+        \textbf{Parameter}                      & \textbf{Value}                         \\
         \midrule
-        Number of subcarriers ($N$)        & 64 \\
-        Modulation                         & 4-QAM/QPSK \\
-        Network input representation       & $NM=256$ one-hot entries \\
-        Hidden processing blocks per DNN   & 5 \\
-        Hidden nodes per layer             & 2048 \\
-        Activation function                & ReLU (hidden), Linear (output) \\
-        Batch normalisation                & Yes, after every FC layer \\
-        Optimiser                          & Adam \\
-        Learning rate                      & $10^{-4}$ \\
-        Batch size                         & 400 \\
-        Training steps                     & 500{,}000 \\
-        Optimal corruption level ($\eta^\star$) & $-15$~dB \\
-        PAPR weight ($\lambda$)            & 0.01 \\
-        CCDF evaluation size               & 50{,}000 random OFDM sequences \\
-        PTS comparison                     & 4 sub-blocks, 4 phase factors \\
+        Number of subcarriers ($N$)             & 64                                     \\
+        Modulation                              & 4-QAM/QPSK                             \\
+        Network input representation            & $2N=128$ real entries (I/Q components) \\
+        Hidden processing blocks per DNN        & 5                                      \\
+        Hidden nodes per layer                  & 2048                                   \\
+        Activation function                     & ReLU (hidden), Linear (output)         \\
+        Batch normalisation                     & Yes, after every FC layer              \\
+        Optimiser                               & Adam                                   \\
+        Learning rate                           & $10^{-4}$                              \\
+        Batch size                              & 400                                    \\
+        Training steps                          & 500{,}000                              \\
+        Optimal corruption level ($\eta^\star$) & $-15$~dB                               \\
+        PAPR weight ($\lambda$)                 & 0.01                                   \\
+        Evaluation size                         & 50{,}000 random OFDM sequences         \\
         \bottomrule
     \end{tabularx}
 \end{table}
 
+Note that while the original paper denotes ReLU for all layers, our implementation utilizes continuous I/Q representation and MSE loss rather than one-hot classification. Therefore, a Linear activation is physically required at the final layer to allow the network outputs to span the full complex plane (both positive and negative values).
 
 \subsection{BER Performance}
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.55\linewidth]{Figures/PRNet/prnet_ber.png}
-    \caption{BER vs.\ SNR of conventional PAPR reduction schemes and PRNet. PRNet achieves the lowest BER among the plotted schemes because the jointly trained encoder--decoder pair effectively learns a form of implicit joint source-channel coding.  Reproduced from~\cite{kim2017novel}.}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figures/PRNet/prnet_ber.png}
+        \caption{Original paper's evaluation~\cite{kim2017novel}}
+        \label{fig:prnet_ber_paper}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=0.96\textwidth]{Figures/PRNet/PRNet - Results/ber_vs_snr_rayleigh.jpg}
+        \caption{Reproduced via our implementation}
+        \label{fig:prnet_ber_reproduced}
+    \end{subfigure}
+    \caption{BER vs.\ SNR performance of PRNet. Both the (a) original paper and (b) our reproduction demonstrate consistent BER performance. The results confirm that PRNet effectively learns an implicit joint source-channel coding over the simulated channel, allowing it to outperform the theoretical baseline.}
     \label{fig:prnet_ber}
 \end{figure}
 
-The BER results show that clipping introduces in-band distortion which becomes the dominant error source at high SNR.  PTS is distortionless in principle but requires side information and multiple IFFT computations. PRNet achieves BER lower than the plotted baselines because the encoder shapes the constellation in a way that the jointly trained decoder can exploit, effectively learning an implicit coding gain under the simulated channel~\cite{kim2017novel}.
+As observed in Figure~\ref{fig:prnet_ber}, the BER performance of our reproduced model is highly consistent with the results reported by the original authors. PRNet acts as a highly efficient deterministic function requiring zero iterative searching or side information during inference. Furthermore, the network achieves a BER lower than the theoretical QPSK baseline because the encoder shapes the constellation in a way that the jointly trained decoder can exploit. This effectively learns an implicit coding gain under the simulated channel, validating the robustness of the deep learning approach~\cite{kim2017novel}.
 
 
 \subsection{PAPR Reduction}
 
+The CCDF evaluation demonstrates a substantial reduction in the PAPR of the PRNet-shaped symbols. The authors report that the probability of the PAPR exceeding 3~dB is less than $10^{-3}$~\cite{kim2017novel}. However, a mathematical critique of the authors' open-source code (\url{https://github.com/gomman/OFDM_PAPR_reduction}) reveals a metric discrepancy: the CCDF is plotted using an amplitude-based proxy rather than the standard power-based definition. Specifically, their implementation computes the metric as:
+\begin{equation*}
+    \mathrm{PAPR}_{\mathrm{proxy}}\,\mathrm{[dB]} = 10\log_{10}\left(\max_{n} \lvert x_{\mathrm{norm}}[n] \rvert\right),
+\end{equation*}
+where $x_{\mathrm{norm}}[n]$ represents the time-domain symbol normalized to unit average power. In contrast, the standard physical PAPR (in dB) is a true power ratio, defined mathematically as:
+\begin{equation*}
+    \mathrm{PAPR}_{\mathrm{standard}}\,\mathrm{[dB]} = 10\log_{10}\left(\max_{n} \lvert x_{\mathrm{norm}}[n] \rvert^2\right) = 20\log_{10}\left(\max_{n} \lvert x_{\mathrm{norm}}[n] \rvert\right).
+\end{equation*}
+Consequently, the proxy metric is mathematically exactly half of the standard physical PAPR in decibels ($\mathrm{PAPR}_{\mathrm{standard}}\,\mathrm{[dB]} = 2\cdot \mathrm{PAPR}_{\mathrm{proxy}}\,\mathrm{[dB]}$).
+
+As shown in Figure~\ref{fig:prnet_ccdf}, evaluating the model using the authors' proxy metric perfectly reproduces the 3~dB curve reported in the original paper, confirming the consistency of our reproduced architecture. However, evaluating the trained model under the standard physical metric yields a realistic PAPR of approximately 6~dB at a CCDF of $10^{-3}$. This still represents a substantial 4--5~dB reduction from the original OFDM baseline (typically 10--11~dB), validating PRNet's exceptional PAPR reduction capabilities despite the metric discrepancy.
+
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.55\linewidth]{Figures/PRNet/prnet_ccdf.png}
-    \caption{CCDF of PAPR as reported by the original PRNet paper. The PRNet curve is significantly shifted to the left compared to conventional OFDM.  Reproduced from~\cite{kim2017novel}.}
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=\textwidth]{Figures/PRNet/prnet_ccdf.png}
+        \caption{Original paper's evaluation~\cite{kim2017novel}}
+        \label{fig:prnet_ccdf_paper}
+    \end{subfigure}
+    \hfill
+    \begin{subfigure}[b]{0.48\textwidth}
+        \centering
+        \includegraphics[width=0.94\textwidth]{Figures/PRNet/PRNet - Results/ccdf_papr_rayleigh.jpg}
+        \caption{Reproduced via our implementation}
+        \label{fig:prnet_ccdf_reproduced}
+    \end{subfigure}
+    \caption{CCDF of PAPR performance for PRNet. Both the (a) original paper and (b) our reproduction demonstrate a consistent 3~dB curve when using the authors' proxy metric. However, our reproduction validates that the standard physical metric yields a realistic 6~dB PAPR, which still significantly outperforms the original OFDM baseline.}
     \label{fig:prnet_ccdf}
 \end{figure}
 
-The CCDF plot demonstrates that PRNet substantially reduces PAPR.  The paper reports that the probability of PAPR exceeding 3~dB is less than 0.1\%~\cite{kim2017novel}, allowing the HPA to operate with substantially less input back-off.
+\subsection{Learned Constellation Shaping}
 
-It should be noted that the released implementation computes the CCDF using a peak-amplitude proxy ($10\log_{10}\max_n |x[n]|$) rather than the standard power-PAPR definition.  Standard power-PAPR evaluation yields a PRNet value near 6~dB at $\mathrm{CCDF} = 10^{-3}$, which is still a significant reduction from the conventional OFDM baseline of 10--11~dB, but less extreme than the paper's visual figure suggests.
+To understand how PRNet achieves this implicit coding gain while simultaneously reducing PAPR, it is instructive to examine the raw output of the encoder. Unlike classical OFDM, which enforces rigidly discrete QPSK boundaries, the PRNet encoder learns to dynamically distort and disperse the constellation points.
 
-
-\subsection{Effect of Corruption Level}
-
-\begin{figure}[H]
-    \centering
-    \includegraphics[width=0.55\linewidth]{Figures/PRNet/prnet_ber_corruption.png}
-    \caption{BER of PRNet trained at different corruption levels $\eta$. The model trained at $\eta = -15$~dB consistently yields the lowest BER across the entire SNR range. Reproduced from~\cite{kim2017novel}.}
-    \label{fig:prnet_ber_corruption}
-\end{figure}
-
-The results validate the two-stage training procedure: models trained at very low corruption levels ($\eta = -30$~dB) develop overly tight decision boundaries and fail under real channel noise, while models trained at excessive corruption ($\eta = 0$~dB) cannot learn meaningful boundaries. The optimal corruption level $\eta^\star = -15$~dB yields the lowest BER across all tested SNR values~\cite{kim2017novel}.
-
-
-\subsection{BER--PAPR Trade-off}
+Figure~\ref{fig:prnet_constellation} visualizes the complex output symbols generated by the trained encoder. By mapping the discrete input data into this continuous, cloud-like spatial distribution, the network successfully trades off traditional Euclidean spacing to achieve optimal PAPR reduction and joint source-channel coding over the Rayleigh fading channel.
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.55\linewidth]{Figures/PRNet/prnet_ber_papr_lambda.png}
-    \caption{BER vs.\ average PAPR by varying $\lambda$ at SNR $= 20$~dB. Larger $\lambda$ reduces PAPR but increases BER, confirming the fundamental trade-off. Reproduced from~\cite{kim2017novel}.}
-    \label{fig:prnet_ber_lambda}
+    \includegraphics[width=0.55\textwidth]{Figures/PRNet/PRNet - Results/encoder_constellation_rayleigh.jpg}
+    \caption{The learned constellation output of the PRNet encoder. The network disperses the traditional QPSK boundaries into a continuous distribution to minimize PAPR while preserving decodability.}
+    \label{fig:prnet_constellation}
 \end{figure}
-
-As $\lambda$ increases, PAPR decreases monotonically while BER increases, confirming the fundamental tension between these objectives.  At $\lambda = 0.01$, the paper reports a practical operating point with meaningful PAPR reduction and competitive BER~\cite{kim2017novel}.
-
 
 \subsection{Computational Complexity}
 
-At inference time, PRNet replaces the $U$-fold search of SLM/PTS with a single forward pass.  The per-pass complexity is $\mathcal{O}(L \cdot K \cdot M)$, where $L$ is the number of layers, $K = 2048$ is the hidden dimension, and $M$ is the input dimension.  This cost is fixed and does not grow with the number of candidates $U$~\cite{kim2017novel}.
+At inference time, PRNet eliminates the need for iterative searching (like in PTS) and replaces it with a single neural network forward pass.
+
+The original authors reported the computational complexity of this forward pass as $\mathcal{O}(L \cdot K \cdot M)$, where $L$ is the number of fully connected processing layers (5), $K$ is the hidden layer size (2048), and $M$ is the modulation order (4 for QPSK)~\cite{kim2017novel}. However, this formulation contains a mathematical error. In a fully connected network, passing data from one hidden layer to the next requires multiplying a vector of size $K$ by a weight matrix of size $K \times K$. Because $K$ is very large (2048), these hidden layer computations completely dominate the processing time. Therefore, the true theoretical complexity is $\mathcal{O}(L \cdot K^2)$, which is entirely independent of the modulation order $M$.
+
+Despite this error in their theoretical formulation, the practical benefit remains clear: the computational cost of PRNet is fixed, meaning it does not scale exponentially with the search space like classical scrambling methods do.
 
 \begin{table}[H]
     \centering
-    \caption{Execution time comparison for different PAPR reduction methods~\cite{kim2017novel}.}
+    \caption{Execution time comparison for different PAPR reduction methods, as reported by the original authors~\cite{kim2017novel}.}
     \label{tab:prnet_timing}
     \begin{tabular}{@{} l r @{}}
         \toprule
-        \textbf{Method} & \textbf{Execution time ($\mu$s)} \\
+        \textbf{Method}             & \textbf{Execution time ($\mu$s)} \\
         \midrule
-        PTS                         & 2{,}890 \\
-        Clipping and filtering      & 1{,}415 \\
-        PRNet (without parallelism) & 2{,}304 \\
-        PRNet (with GPU)            & 480 \\
+        PTS                         & 2{,}890                          \\
+        Clipping and filtering      & 1{,}415                          \\
+        PRNet (without parallelism) & 2{,}304                          \\
+        PRNet (with GPU)            & 480                              \\
         \bottomrule
     \end{tabular}
 \end{table}
 
-With GPU acceleration, PRNet is approximately 6 times faster than PTS and 3 times faster than clipping and filtering, while achieving better BER and PAPR performance~\cite{kim2017novel}.
-
+As shown in Table~\ref{tab:prnet_timing}, applying GPU acceleration allows PRNet to run approximately 6 times faster than PTS and 3 times faster than clipping and filtering, all while delivering superior BER and PAPR performance~\cite{kim2017novel}.
 
 % ============================================================================
 \section{Limitations}
 \label{sec:limitations}
 % ============================================================================
 
-Despite its contributions, PRNet presents several limitations that define the research agenda for subsequent work.
-
-\textbf{Scalability.} The fully connected architecture scales poorly with the number of subcarriers. The first encoder FC layer has $d_{\mathrm{in}} \times 2048$ weights, where $d_{\mathrm{in}} = NM$ in the one-hot formulation.  For $N = 64$ and $M = 4$, this yields 524{,}288 parameters in the first layer alone.  Scaling to practical large-FFT systems would require alternative architectures such as convolutional, unfolding, or attention-based designs~\cite{kim2017novel}.
-
-\textbf{Channel mismatch.} Performance is tightly coupled to the channel model used during training. Extending PRNet to frequency-selective channels, imperfect channel state information, and rapidly time-varying scenarios remains an open problem~\cite{kim2017novel}.
-
-\textbf{Configuration dependence.} Any change in modulation order ($M$), number of subcarriers ($N$), or pilot structure changes the network's input/output dimensions or signal statistics, requiring architectural modifications or complete retraining.
-
-\textbf{PAPR metric ambiguity.} The released code computes the PRNet CCDF using a peak-amplitude proxy rather than the standard power-PAPR definition, producing results that appear more favourable than standard evaluation.
-
-\textbf{Interpretability.} The learned constellation shaping is encoded in millions of weight values. Understanding the specific structure the network has discovered, or providing worst-case guarantees, is extremely difficult compared to transparent methods like SLM.
-
-
-% ============================================================================
-\section{Related Work}
-\label{sec:related_work}
-% ============================================================================
-
-PRNet established the autoencoder paradigm for PAPR reduction.  Subsequent works build on this foundation while addressing specific limitations: constrained autoencoders that learn SLM-style phase factors rather than unconstrained nonlinear mappings, signal-cancellation frameworks that achieve PAPR reduction without requiring a jointly trained decoder, and adaptations of the autoencoder architecture to optical OFDM systems with fibre-channel effects~\cite{kim2017novel}.
-
-
-% ============================================================================
-\section{Summary}
-\label{sec:ch2_summary}
-% ============================================================================
-
-This chapter presented PRNet, the first deep learning-based system for joint PAPR and BER optimisation in OFDM.  The autoencoder architecture replaces the constellation mapper and de-mapper with jointly trained DNNs, eliminating the multi-IFFT search and side information overhead of classical SLM.  The two-stage training procedure identifies the optimal corruption level before introducing the PAPR penalty, and the resulting system achieves both lower BER and lower PAPR than the classical baselines at competitive computational cost.  The limitations identified --- scalability, channel sensitivity, configuration dependence, and interpretability --- define the direction for future work in this area.
+Despite its contributions, PRNet presents several limitations that define the research agenda for subsequent work:
+\begin{itemize}
+    \item \textbf{Scalability Constraints:} Fully connected layers scale quadratically with the subcarrier count ($N$). While manageable for experimental $N=64$ setups, scaling to commercial $N=1024$ standards triggers a parameter explosion and prohibitive memory overhead, restricting deployment in large-scale systems.
+    \item \textbf{Channel Mismatch Vulnerability:} The network severely overfits to the specific channel model used during training. Deploying PRNet in dynamic environments with unmodelled fading or imperfect channel state information degrades performance significantly.
+    \item \textbf{Configuration Dependence:} The architecture relies on rigidly fixed input and output dimensions. Any real-time adjustment to the modulation order ($M$) or subcarrier count ($N$) breaks the model, requiring a full architectural redesign and retraining from scratch.
+    \item \textbf{Lack of Interpretability:} The constellation shaping strategies are hidden within millions of "black-box" weights. This lack of transparency makes it mathematically impossible to provide the worst-case performance guarantees required by strict telecommunication standards.
+\end{itemize}

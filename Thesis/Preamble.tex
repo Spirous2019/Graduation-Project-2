@@ -261,7 +261,7 @@
     bookmarksopenlevel = 0,
     hypertexnames      = false,
     colorlinks         = true,
-    linkcolor          = black,      % TOC, internal refs — black for print
+    linkcolor          = blue,       % TOC, internal refs (chapters, figures, equations)
     citecolor          = blue,       % Citations
     urlcolor           = navyDark,   % URLs
     filecolor          = black,
@@ -321,11 +321,13 @@
 \newtcolorbox{motivation}[1][]{%
     blockbase = motivationColor,
     colback   = motivationBg,
+    breakable,
     title     = {#1}}
 
 \newtcolorbox{keyinsight}[1][]{%
     blockbase = insightColor,
     colback   = insightBg,
+    breakable,
     title     = {#1}}
 
 % Key Result block — black pill badge, equation tag suppressed inline

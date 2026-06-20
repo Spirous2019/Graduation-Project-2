@@ -97,7 +97,7 @@ def main():
     ref = np.array(QPSK_PTS)
     ax2.scatter(ref.real, ref.imag,
                 marker="+", s=120, linewidths=2.0,
-                c="#0A3D91", zorder=6, label=r"QPSK inputs $s_k$")
+                c="#0A3D91", zorder=6, label="QPSK inputs")
 
     ax2.axhline(0, color="grey", lw=0.5)
     ax2.axvline(0, color="grey", lw=0.5)
@@ -105,9 +105,16 @@ def main():
     ax2.set_xlabel("In-Phase", fontsize=12)
     ax2.set_ylabel("Quadrature", fontsize=12)
     ax2.set_aspect("equal")
+    
+    # Dynamically set limits to form a perfect square based on the actual data
+    max_val = max(np.abs(enc_flat.real).max(), np.abs(enc_flat.imag).max())
+    limit = max_val * 1.05  # Add 5% padding
+    ax2.set_xlim([-limit, limit])
+    ax2.set_ylim([-limit, limit])
+    
     ax2.legend(fontsize=8, loc="upper right", markerscale=1.0)
 
-    fig.suptitle(f"PRNet Encoder Constellation (Rayleigh Channel, λ={LAMBDA})",
+    fig.suptitle("PRNet Encoder Constellation",
                  fontsize=14, fontweight="bold")
     plt.tight_layout()
 

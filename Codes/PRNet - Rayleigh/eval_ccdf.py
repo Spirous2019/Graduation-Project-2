@@ -5,9 +5,10 @@ the authors' released code: 10*log10(max(|x|)) after RMS normalizing the PRNet
 waveform. That is a peak-amplitude proxy rather than the standard power-PAPR
 definition, but it is the metric needed to match the paper's Fig. 3.
 
-This script intentionally plots only one PRNet curve: a solid red PRNet curve
-using the paper-compatible metric. The original OFDM baseline is retained as a
-black dashed curve for comparison.
+This script intentionally plots three curves to highlight this discrepancy:
+1. Original OFDM baseline (Standard PAPR)
+2. PRNet (Standard Physical PAPR)
+3. PRNet (Authors' Proxy PAPR, matching the paper)
 """
 
 import argparse
@@ -64,16 +65,18 @@ def load_model(oversampling: int) -> PRNet:
     return model
 
 
-def compute_prnet_paper_papr(model: PRNet, real_symbols: np.ndarray) -> np.ndarray:
+def compute_prnet_papr(model: PRNet, real_symbols: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     paper_proxy = []
+    standard_papr = []
     chunk = 2000
 
     for i in range(0, len(real_symbols), chunk):
         _, x_time = model.encode(real_symbols[i : i + chunk], training=False)
         x_np = x_time.numpy()
         paper_proxy.append(compute_papr_amplitude_proxy_db(x_np))
+        standard_papr.append(compute_papr_db(x_np))
 
-    return np.concatenate(paper_proxy)
+    return np.concatenate(standard_papr), np.concatenate(paper_proxy)
 
 
 def main(num_symbols: int, oversampling: int, seed: int, show_plot: bool) -> None:
@@ -89,23 +92,26 @@ def main(num_symbols: int, oversampling: int, seed: int, show_plot: bool) -> Non
     print(f"  Computing PAPR - Original OFDM, standard power PAPR (L={oversampling}) ...")
     papr_orig = compute_papr_db(ofdm_ifft(symbols, oversampling))
 
+    print(f"  Computing PAPR - PRNet, standard power metric (L={oversampling}) ...")
     print(f"  Computing PAPR - PRNet, paper-compatible peak-amplitude metric (L={oversampling}) ...")
-    papr_prnet = compute_prnet_paper_papr(model, real_symbols)
+    papr_prnet_standard, papr_prnet_proxy = compute_prnet_papr(model, real_symbols)
 
     print("\n  Approximate PAPR0 at CCDF=1e-3")
     print(f"    Original OFDM             : {percentile_at_ccdf(papr_orig):.3f} dB")
-    print(f"    PRNet paper-compatible    : {percentile_at_ccdf(papr_prnet):.3f} dB")
-    print("    Note: the PRNet curve matches the paper/code metric; it is not standard power PAPR.")
+    print(f"    PRNet (Standard PAPR)     : {percentile_at_ccdf(papr_prnet_standard):.3f} dB")
+    print(f"    PRNet (Authors' Proxy)    : {percentile_at_ccdf(papr_prnet_proxy):.3f} dB")
 
     ccdf_orig = compute_ccdf(papr_orig, PAPR_THRESHOLDS)
-    ccdf_prnet = compute_ccdf(papr_prnet, PAPR_THRESHOLDS)
+    ccdf_prnet_standard = compute_ccdf(papr_prnet_standard, PAPR_THRESHOLDS)
+    ccdf_prnet_proxy = compute_ccdf(papr_prnet_proxy, PAPR_THRESHOLDS)
 
     fig, ax = plt.subplots(figsize=(7, 5.5))
-    ax.semilogy(PAPR_THRESHOLDS, ccdf_orig, "k--", lw=2, label="Original OFDM")
-    ax.semilogy(PAPR_THRESHOLDS, ccdf_prnet, "r-", lw=2.5, label="PRNet")
+    ax.semilogy(PAPR_THRESHOLDS, ccdf_orig, "k--", lw=2, label="Original OFDM (Standard PAPR)")
+    ax.semilogy(PAPR_THRESHOLDS, ccdf_prnet_standard, "r-", lw=2.5, label="PRNet (Standard Physical PAPR)")
+    ax.semilogy(PAPR_THRESHOLDS, ccdf_prnet_proxy, "r--", lw=2.5, label="PRNet (Authors' Proxy Metric)")
 
-    ax.set_xlabel("PAPR0 [dB]", fontsize=13)
-    ax.set_ylabel("CCDF (PAPR > PAPR0)", fontsize=13)
+    ax.set_xlabel(r"PAPR$_0$ [dB]", fontsize=13)
+    ax.set_ylabel(r"CCDF (PAPR $>$ PAPR$_0$)", fontsize=13)
     ax.set_title("CCDF of PAPR - Rayleigh-Trained PRNet")
     ax.legend(fontsize=10, loc="upper right")
     ax.grid(True, which="both", ls="--", alpha=0.5)

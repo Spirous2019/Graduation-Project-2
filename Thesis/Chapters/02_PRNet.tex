@@ -175,7 +175,7 @@ Selecting $\eta$ poses a critical trade-off: insufficient noise yields overly ti
     \centering
     \caption{PRNet simulation parameters~\cite{kim2017novel}.}
     \label{tab:prnet_params}
-    \begin{tabularx}{\linewidth}{@{} l X @{}}
+    \begin{tabular}{@{} l l @{}}
         \toprule
         \textbf{Parameter}                      & \textbf{Value}                         \\
         \midrule
@@ -194,7 +194,7 @@ Selecting $\eta$ poses a critical trade-off: insufficient noise yields overly ti
         PAPR weight ($\lambda$)                 & 0.01                                   \\
         Evaluation size                         & 50{,}000 random OFDM sequences         \\
         \bottomrule
-    \end{tabularx}
+    \end{tabular}
 \end{table}
 
 Note that while the original paper denotes ReLU for all layers, our implementation utilizes continuous I/Q representation and MSE loss rather than one-hot classification. Therefore, a Linear activation is physically required at the final layer to allow the network outputs to span the full complex plane (both positive and negative values).
@@ -206,14 +206,14 @@ Note that while the original paper denotes ReLU for all layers, our implementati
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{Figures/PRNet/prnet_ber.png}
-        \caption{Original paper's evaluation~\cite{kim2017novel}}
+        \caption{Results from the original paper~\cite{kim2017novel}}
         \label{fig:prnet_ber_paper}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.96\textwidth]{Figures/PRNet/PRNet - Results/ber_vs_snr_rayleigh.jpg}
-        \caption{Reproduced via our implementation}
+        \caption{Our simulated results}
         \label{fig:prnet_ber_reproduced}
     \end{subfigure}
     \caption{BER vs.\ SNR performance of PRNet. Both the (a) original paper and (b) our reproduction demonstrate consistent BER performance. The results confirm that PRNet effectively learns an implicit joint source-channel coding over the simulated channel, allowing it to outperform the theoretical baseline.}
@@ -242,14 +242,14 @@ As shown in Figure~\ref{fig:prnet_ccdf}, evaluating the model using the authors'
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=\textwidth]{Figures/PRNet/prnet_ccdf.png}
-        \caption{Original paper's evaluation~\cite{kim2017novel}}
+        \caption{Results from the original paper~\cite{kim2017novel}}
         \label{fig:prnet_ccdf_paper}
     \end{subfigure}
     \hfill
     \begin{subfigure}[b]{0.48\textwidth}
         \centering
         \includegraphics[width=0.94\textwidth]{Figures/PRNet/PRNet - Results/ccdf_papr_rayleigh.jpg}
-        \caption{Reproduced via our implementation}
+        \caption{Our simulated results}
         \label{fig:prnet_ccdf_reproduced}
     \end{subfigure}
     \caption{CCDF of PAPR performance for PRNet. Both the (a) original paper and (b) our reproduction demonstrate a consistent 3~dB curve when using the authors' proxy metric. However, our reproduction validates that the standard physical metric yields a realistic 6~dB PAPR, which still significantly outperforms the original OFDM baseline.}

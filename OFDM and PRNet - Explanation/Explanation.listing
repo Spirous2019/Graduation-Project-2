@@ -1,1 +1,0 @@
-        papr_standard = 10 * np.log10(np.max(np.abs(x_norm)**2))

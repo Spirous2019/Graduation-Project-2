@@ -68,9 +68,6 @@ def eval_prnet_ber(model: PRNet, bits: np.ndarray, symbols: np.ndarray, eb_n0_db
     return errors / total
 
 
-def rayleigh_qpsk_theory(eb_n0_db: np.ndarray) -> np.ndarray:
-    eb_n0 = 10.0 ** (eb_n0_db / 10.0)
-    return np.array([0.5 * (1.0 - sqrt(g / (1.0 + g))) for g in eb_n0])
 
 
 def main(num_symbols: int, show_plot: bool) -> None:
@@ -88,13 +85,7 @@ def main(num_symbols: int, show_plot: bool) -> None:
         print(f"PRNet={ber:.4e}")
 
     fig, ax = plt.subplots(figsize=(7, 5.5))
-    ax.semilogy(
-        EB_N0_RANGE,
-        rayleigh_qpsk_theory(EB_N0_RANGE),
-        "b--",
-        lw=1.5,
-        label="Theoretical QPSK (Rayleigh)",
-    )
+
     ax.semilogy(EB_N0_RANGE, ber_prnet, "r-", lw=2, label="PRNet (Rayleigh)")
 
     ax.set_xlabel("$E_b/N_0$ [dB]", fontsize=13)

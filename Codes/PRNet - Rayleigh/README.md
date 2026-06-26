@@ -1,19 +1,19 @@
-# PRNet - Rayleigh
+# PRNet - Rayleigh Evaluation
 
 Reference: M. Kim, W. Lee, and D.-H. Cho, "A Novel PAPR Reduction Scheme for
 OFDM System Based on Deep Learning," IEEE Communications Letters, 2018.
 
-This folder contains a TensorFlow/Keras reproduction of PRNet trained and
-evaluated for a Rayleigh fading channel.
+This folder contains a TensorFlow/Keras reproduction of PRNet evaluated for a 
+Rayleigh fading channel. Note: Training instructions and code are handled 
+separately via the Kaggle guide (`kaggle_training_guide.md`).
 
 ## Files
 
 ```text
 ofdm_helpers.py        OFDM, QPSK, PAPR, CCDF, and channel helpers
 prnet_model.py         PRNet encoder/decoder model
-train_prnet.py         Training loop
 eval_ber.py            BER evaluation over Rayleigh fading
-eval_ccdf.py           Paper-compatible CCDF evaluation
+eval_ccdf.py           CCDF evaluation (Standard vs Paper-Compatible)
 plot_constellation.py  Encoder constellation plot
 ```
 
@@ -24,8 +24,6 @@ plot_constellation.py  Encoder constellation plot
 | Subcarriers | 64 |
 | Modulation | 4-QAM / QPSK |
 | Channel | Rayleigh fading + AWGN |
-| Batch size | 400 |
-| Training batches in paper | 500,000 |
 | Lambda | 0.01 |
 | Corruption level eta | -15 dB |
 
@@ -34,23 +32,7 @@ whereas the original paper/code uses a `4*N=256` one-hot representation. The
 network idea is the same: one whole OFDM symbol is mapped to 64 learned complex
 subcarrier values.
 
-## Implementation Differences That Matter
-
-The authors' public TensorFlow 1 code differs from a clean mathematical
-implementation in several ways:
-
-- It uses a `4*N=256` one-hot input/output representation, while this project
-  uses `2*N=128` real/imaginary QPSK coordinates.
-- It effectively uses no oversampling in the released PRNet CCDF code.
-- It trains with learning rate `1e-4`; this project uses `1e-3`.
-- Its published PRNet CCDF metric appears to be the peak-amplitude proxy
-  described below.
-
-These differences explain why a sensible Rayleigh model can have a reasonable
-BER curve but a CCDF curve shifted right of the paper's red curve when measured
-with true standard PAPR.
-
-## What Was Wrong With the CCDF
+## The CCDF Plot Discrepancy
 
 The standard physical PAPR definition is:
 
@@ -58,41 +40,34 @@ The standard physical PAPR definition is:
 PAPR_dB = 10*log10(max(|x|^2) / mean(|x|^2))
 ```
 
-Using that definition, the saved Rayleigh PRNet weights give a PRNet point near
-6 dB at `CCDF = 1e-3`. The paper's red PRNet curve is near 3 dB, so a direct
-standard-PAPR evaluation does not visually match the paper.
+Using that standard definition, the PRNet curve does not visually match the 
+paper's red PRNet curve (which appears near 3 dB at `CCDF = 1e-3`). 
 
-The reason is in the authors' released TensorFlow code. Their PRNet CCDF
-calculation stores:
+The reason lies in the authors' released TensorFlow code. Their PRNet CCDF
+calculation uses a peak-amplitude proxy:
 
 ```text
 peak_power_symbol = max(abs(encoded_symbol_original))
 CCDF input        = 10*log10(peak_power_symbol)
 ```
 
-That is a peak-amplitude proxy, not the standard peak-to-average power ratio.
 After RMS normalization, this proxy is approximately half of standard PAPR in
 dB, which explains why the paper-compatible PRNet curve appears around 3 dB.
 
-## How It Is Fixed Here
+## How It Is Addressed Here
 
-`eval_ccdf.py` now produces one PRNet CCDF curve only:
+`eval_ccdf.py` plots three curves to provide full transparency:
 
-- Original OFDM is plotted as a black dashed baseline.
-- PRNet is plotted as a solid red curve.
-- The PRNet curve uses the paper-compatible peak-amplitude proxy, matching the
-  authors' released code and the paper's Fig. 3 appearance.
+1. **Original OFDM (Standard PAPR):** Black dashed baseline.
+2. **PRNet (Standard Physical PAPR):** Solid red curve. This is the true, scientifically standard PAPR of the PRNet waveform.
+3. **PRNet (Authors' Proxy Metric):** Dashed red curve. This reproduces the peak-amplitude proxy matching the authors' released code and the paper's Fig. 3 appearance.
+
 - The default CCDF sample count is `25,000` OFDM symbols per curve.
 - The default CCDF oversampling is `1`, matching the authors' released PRNet
   CCDF code.
 - A fixed random seed is used by default so repeated readings are stable.
 
-This is intentionally a paper-reproduction plot. The helper function
-`compute_papr_db()` still implements the scientifically standard PAPR formula
-for strict physical PAPR reporting, but `eval_ccdf.py` does not plot a second
-standard-PRNet curve because that caused confusion and did not match the paper.
-
-## BER Axis Fix
+## BER Axis Note
 
 `eval_ber.py` treats the x-axis as `Eb/N0`, matching the paper. Internally, the
 channel simulator still uses symbol energy, so QPSK adds `10*log10(2)` dB when
@@ -100,10 +75,9 @@ generating noise.
 
 ## Usage
 
-```bash
-python train_prnet.py
-python train_prnet.py --quick
+*Ensure you have downloaded the trained model weights from Kaggle into the `models/` folder first.*
 
+```bash
 python eval_ber.py --no-show
 python eval_ccdf.py --no-show
 python plot_constellation.py
@@ -124,7 +98,4 @@ figures/ccdf_papr_rayleigh.jpg
 
 ## Interpretation Rule
 
-Use `figures/ccdf_papr_rayleigh.jpg` when you want the paper-matching PRNet
-CCDF curve. When reporting numeric CCDF values, state the metric explicitly:
-the paper-compatible proxy is near 3 dB for the saved model at
-`CCDF = 1e-3`, while the standard power-PAPR definition is near 6 dB.
+When reporting numeric CCDF values, state the metric explicitly. The plot clearly shows the divergence between the true physical PAPR of the network and the proxy metric published in the original paper.

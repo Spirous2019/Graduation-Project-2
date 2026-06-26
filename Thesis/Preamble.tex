@@ -88,22 +88,22 @@
     \vspace*{0.5ex}\noindent\textcolor{asuBlue}{\rule{\textwidth}{1.5pt}}}
 
 \titleformat{\chapter}[display]
-    {\normalfont\Large\bfseries}
-    {\textcolor{asuBlue}{\MakeUppercase{\chaptertitlename}\ \thechapter}}
-    {0.5ex}
-    {\huge\raggedright\bfseries\color{navyDark}}[\chapterrule]
+{\normalfont\Large\bfseries}
+{\textcolor{asuBlue}{\MakeUppercase{\chaptertitlename}\ \thechapter}}
+{0.5ex}
+{\huge\raggedright\bfseries\color{navyDark}}[\chapterrule]
 \titlespacing*{\chapter}{0pt}{-25pt}{12pt}
 
 % --- Section format ---
 \titleformat{\section}
-    {\normalfont\Large\bfseries\color{navyDark}}
-    {\thesection}{1em}{}
+{\normalfont\Large\bfseries\color{navyDark}}
+{\thesection}{1em}{}
 \titlespacing*{\section}{0pt}{1.5ex plus 0.5ex minus 0.2ex}{1ex plus 0.2ex}
 
 % --- Subsection format ---
 \titleformat{\subsection}
-    {\normalfont\large\bfseries\color{navyMedium}}
-    {\thesubsection}{1em}{}
+{\normalfont\large\bfseries\color{navyMedium}}
+{\thesubsection}{1em}{}
 \titlespacing*{\subsection}{0pt}{1.5ex plus 0.5ex minus 0.2ex}{0.8ex plus 0.2ex}
 
 % ==============================================================================
@@ -213,37 +213,37 @@
 \usepackage[most]{tcolorbox}
 
 \lstdefinestyle{modern}{
-    basicstyle       = \ttfamily\small\color{black},
-    keywordstyle     = \color{codeKeyword}\bfseries,
-    emph             = {np,numpy,ofdm_symbol,best_papr,candidate,phases,papr,N,U,
-                        inf,pi,exp,fft,ifft,mean,array,zeros,ones,random,choice,dot,
-                        sum,sqrt,log10,len,range,print,min,max,abs,int,float,str,
-                        list,dict,type,super,open,enumerate,sorted,map,filter,zip,
-                        isinstance,hasattr,getattr,setattr},
-    emphstyle        = \color{black},
-    commentstyle     = \color{codeComment}\itshape,
-    stringstyle      = \color{codeString},
-    numberstyle      = \tiny\ttfamily\color{codeLineNum},
-    numbers          = left,
-    numbersep        = 12pt,
-    classoffset      = 1,
-    keywords         = [2]{},   keywords = [3]{},
-    keywords         = [4]{},   keywords = [5]{},
-    keywordstyle     = [2]\color{black},
-    keywordstyle     = [3]\color{black},
-    keywordstyle     = [4]\color{black},
-    keywordstyle     = [5]\color{black},
-    emphstyle        = \color{black},
-    classoffset      = 0,
-    breaklines       = true,
-    tabsize          = 4,
-    showstringspaces = false,
-    alsoletter       = {0123456789_},
-    literate         = {0}{{\color{codeNumber}0}}1 {1}{{\color{codeNumber}1}}1
-                       {2}{{\color{codeNumber}2}}1 {3}{{\color{codeNumber}3}}1
-                       {4}{{\color{codeNumber}4}}1 {5}{{\color{codeNumber}5}}1
-                       {6}{{\color{codeNumber}6}}1 {7}{{\color{codeNumber}7}}1
-                       {8}{{\color{codeNumber}8}}1 {9}{{\color{codeNumber}9}}1
+basicstyle       = \ttfamily\small\color{black},
+keywordstyle     = \color{codeKeyword}\bfseries,
+emph             = {np,numpy,ofdm_symbol,best_papr,candidate,phases,papr,N,U,
+        inf,pi,exp,fft,ifft,mean,array,zeros,ones,random,choice,dot,
+        sum,sqrt,log10,len,range,print,min,max,abs,int,float,str,
+        list,dict,type,super,open,enumerate,sorted,map,filter,zip,
+        isinstance,hasattr,getattr,setattr},
+emphstyle        = \color{black},
+commentstyle     = \color{codeComment}\itshape,
+stringstyle      = \color{codeString},
+numberstyle      = \tiny\ttfamily\color{codeLineNum},
+numbers          = left,
+numbersep        = 12pt,
+classoffset      = 1,
+keywords         = [2]{},   keywords = [3]{},
+keywords         = [4]{},   keywords = [5]{},
+keywordstyle     = [2]\color{black},
+keywordstyle     = [3]\color{black},
+keywordstyle     = [4]\color{black},
+keywordstyle     = [5]\color{black},
+emphstyle        = \color{black},
+classoffset      = 0,
+breaklines       = true,
+tabsize          = 4,
+showstringspaces = false,
+alsoletter       = {0123456789_},
+literate         = {0}{{\color{codeNumber}0}}1 {1}{{\color{codeNumber}1}}1
+{2}{{\color{codeNumber}2}}1 {3}{{\color{codeNumber}3}}1
+{4}{{\color{codeNumber}4}}1 {5}{{\color{codeNumber}5}}1
+{6}{{\color{codeNumber}6}}1 {7}{{\color{codeNumber}7}}1
+{8}{{\color{codeNumber}8}}1 {9}{{\color{codeNumber}9}}1
 }
 
 % ==============================================================================
@@ -301,21 +301,21 @@
 % ==============================================================================
 \tcbset{
     blockbase/.style={
-        enhanced,
-        sharp corners,
-        boxrule          = 0pt,
-        frame hidden,
-        borderline west  = {3.5pt}{0pt}{#1},
-        left             = 10pt,
-        right            = 10pt,
-        top              = 6pt,
-        bottom           = 6pt,
-        before skip      = 6pt,
-        after skip       = 8pt,
-        fonttitle        = \bfseries\large,
-        coltitle         = #1,
-        attach title to upper = {\par\vspace{0.2em}},
-    }
+            enhanced,
+            sharp corners,
+            boxrule          = 0pt,
+            frame hidden,
+            borderline west  = {3.5pt}{0pt}{#1},
+            left             = 10pt,
+            right            = 10pt,
+            top              = 6pt,
+            bottom           = 6pt,
+            before skip      = 6pt,
+            after skip       = 8pt,
+            fonttitle        = \bfseries\large,
+            coltitle         = #1,
+            attach title to upper = {\par\vspace{0.2em}},
+        }
 }
 
 \newtcolorbox{motivation}[1][]{%
@@ -334,34 +334,34 @@
 \makeatletter
 \newcommand{\@keyresulttag}{}
 \newtcolorbox{keyresult}{%
-    enhanced, sharp corners, breakable,
-    before upper = {%
-        \setlength\abovedisplayskip{5pt}%
-        \setlength\abovedisplayshortskip{5pt}%
-        \setlength\belowdisplayskip{5pt}%
-        \setlength\belowdisplayshortskip{5pt}%
-        \def\Hy@raisedlink####1{\vbox to 0pt{\vskip-60pt \hbox{####1}\vss}}%
-        \def\tagform@####1{\maketag@@@{####1}}%
-        \def\maketag@@@####1{\gdef\@keyresulttag{####1}}%
-    },
-    boxrule         = 0pt,
-    frame hidden,
-    colback         = black!6!white,
-    borderline west = {3.5pt}{0pt}{black},
-    left            = 12pt,
-    right           = 12pt,
-    top             = 26pt,
-    bottom          = 8pt,
-    before skip     = 12pt,
-    after skip      = 12pt,
-    overlay = {%
+enhanced, sharp corners, breakable,
+before upper = {%
+\setlength\abovedisplayskip{5pt}%
+\setlength\abovedisplayshortskip{5pt}%
+\setlength\belowdisplayskip{5pt}%
+\setlength\belowdisplayshortskip{5pt}%
+\def\Hy@raisedlink####1{\vbox to 0pt{\vskip-60pt \hbox{####1}\vss}}%
+\def\tagform@####1{\maketag@@@{####1}}%
+\def\maketag@@@####1{\gdef\@keyresulttag{####1}}%
+},
+boxrule         = 0pt,
+frame hidden,
+colback         = black!6!white,
+borderline west = {3.5pt}{0pt}{black},
+left            = 12pt,
+right           = 12pt,
+top             = 26pt,
+bottom          = 8pt,
+before skip     = 12pt,
+after skip      = 12pt,
+overlay = {%
         \node[anchor=north west,
-              fill=black, text=white,
-              font=\small\bfseries,
-              inner xsep=7pt, inner ysep=3.5pt,
-              rounded corners=3pt]
-          at ([xshift=10pt, yshift=-8pt]frame.north west)
-          {\@keyresulttag};
+            fill=black, text=white,
+            font=\small\bfseries,
+            inner xsep=7pt, inner ysep=3.5pt,
+            rounded corners=3pt]
+        at ([xshift=10pt, yshift=-8pt]frame.north west)
+        {\@keyresulttag};
     },
 }
 \makeatother
@@ -373,11 +373,11 @@
     title     = {#2},
     listing only,
     listing options={
-        style=modern,
-        language=#3,
-        xleftmargin=16pt,
-        #1
-    }
+            style=modern,
+            language=#3,
+            xleftmargin=16pt,
+            #1
+        }
 }
 
 % ==============================================================================

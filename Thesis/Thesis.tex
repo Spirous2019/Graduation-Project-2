@@ -150,7 +150,11 @@
 % ------------------------------------------------------------------------------
 \begin{abstract}
     \addchaptertocentry{Abstract}
+    Orthogonal Frequency-Division Multiplexing (OFDM) is a foundational technology for modern wireless communication systems, offering high spectral efficiency and robustness against multipath fading. However, its widespread deployment is heavily bottlenecked by the high Peak-to-Average Power Ratio (PAPR) of the transmitted signals, which severely reduces the power efficiency of radio frequency amplifiers and causes out-of-band radiation. In the first phase of this research (Graduation Project I), classical PAPR reduction techniques—such as Clipping and Filtering, Tone Reservation, Partial Transmit Sequence (PTS), and Selected Mapping (SLM)—were thoroughly investigated. While these conventional methods successfully mitigate high peaks, they introduce critical trade-offs, including severe in-band distortion, significant computational latency, and the need for bandwidth-consuming side information.
 
+    To overcome these fundamental limitations, this second phase of the research (Graduation Project II) investigates the design, implementation, and evaluation of advanced Machine Learning (ML) and Deep Learning (DL) architectures as paradigm-shifting solutions to the OFDM PAPR problem. Specifically, this thesis evaluates four distinct neural network frameworks: First, we examine \textbf{PRNet}, a deep autoencoder that treats the entire communication chain as a single, jointly optimized neural network to learn data-dependent, low-PAPR constellation mappings. Second, we explore \textbf{Real-Valued Neural Networks (RVNN)}, which drastically reduce parameter complexity by processing baseband signals in the time domain. Third, we analyze \textbf{Deep Learning Tone Reservation (TRNet and DL-TR)}, utilizing both data-driven and model-driven algorithm unrolling to eliminate the slow iterative convergence of classical tone reservation. Finally, we implement \textbf{Neural Network-Based Simplified Clipping and Filtering (NN-SCF)}, which uses sample-wise multi-layer perceptrons to instantly emulate optimal noise-shaping, entirely bypassing recursive Fourier transforms.
+
+    Through unified simulations, this thesis provides a comprehensive comparative analysis of these ML and DL architectures against the theoretical baselines and classical algorithms established in the first phase of the project. The results demonstrate that neural network-based approaches achieve superior PAPR reduction and robust Bit Error Rate (BER) performance.
 \end{abstract}
 
 % ------------------------------------------------------------------------------
@@ -217,11 +221,13 @@
 % ==============================================================================
 % CHAPTERS
 % ==============================================================================
-\input{Chapters/01_OFDM_and_PAPR}      % Ch. 1 — OFDM & Classical PAPR Reduction
-\input{Chapters/02_PRNet}               % Ch. 2 — PRNet (Deep Autoencoder)
-\input{Chapters/03_RVNN}                % Ch. 3 — Real-Valued Neural Networks (RVNN)
-\input{Chapters/04_DL_TR}               % Ch. 4 — Machine Learning Architectures for Tone Reservation
-\input{Chapters/05_NNSCF}               % Ch. 5 — Neural Network-Based Simplified Clipping and Filtering (NN-SCF)
+\input{Chapters/01_OFDM_and_PAPR}       % Ch. 1 — OFDM & Classical PAPR Reduction
+\input{Chapters/02_Machine_Learning}    % Ch. 2 — Machine Learning
+\input{Chapters/03_PRNet}               % Ch. 3 — PRNet (Deep Autoencoder)
+\input{Chapters/04_RVNN}                % Ch. 4 — Real-Valued Neural Networks (RVNN)
+\input{Chapters/05_DL_TR}               % Ch. 5 — Machine Learning Architectures for Tone Reservation
+\input{Chapters/06_NNSCF}               % Ch. 6 — Neural Network-Based Simplified Clipping and Filtering (NN-SCF)
+\input{Chapters/07_Conclusion}          % Ch. 7 — Conclusion and Future Work
 
 
 % ==============================================================================

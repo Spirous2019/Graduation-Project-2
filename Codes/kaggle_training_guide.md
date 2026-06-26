@@ -27,8 +27,7 @@ Training your PRNet models on Kaggle uses free GPU resources (P100 or T4x2).
 
 1. Go to your new Dataset page → **New Notebook**.
 2. Right sidebar → **Session Options → Accelerator**:
-   - **GPU P100** — one model at a time (faster per-model)
-   - **GPU T4x2** — both models simultaneously (see Bonus section)
+   - **GPU P100** — recommended for single model training
 
 > **Note:** No internet access needed. TensorFlow, NumPy, and Matplotlib are pre-installed. No external dependencies.
 
@@ -36,47 +35,7 @@ Training your PRNet models on Kaggle uses free GPU resources (P100 or T4x2).
 
 ## Step 4: Run the Training
 
-### 🟢 AWGN Model
-
 Paste into a new code cell:
-
-```python
-import os, shutil
-
-# 1. Clear working directory
-for f in os.listdir('/kaggle/working/'):
-    p = os.path.join('/kaggle/working/', f)
-    os.unlink(p) if os.path.isfile(p) else shutil.rmtree(p)
-
-# 2. Find the AWGN folder inside the uploaded dataset
-target_dir = None
-for root, dirs, files in os.walk('/kaggle/input'):
-    if 'train_prnet.py' in files and 'AWGN' in root:
-        target_dir = root
-        break
-
-# 3. Copy files to the writable working directory
-if target_dir:
-    for item in os.listdir(target_dir):
-        src = os.path.join(target_dir, item)
-        dst = os.path.join('/kaggle/working/', item)
-        shutil.copytree(src, dst, dirs_exist_ok=True) if os.path.isdir(src) else shutil.copy2(src, dst)
-    print(f"✅ Copied from:\n{target_dir}\n")
-else:
-    print("❌ Could not find the AWGN directory.")
-
-# 4. Train — 100k steps (default, ~30 min on P100)
-!cd /kaggle/working && python train_prnet.py
-
-# For thesis-quality results, use 500k steps instead (~2.5 h):
-# !cd /kaggle/working && python train_prnet.py --steps 500000
-```
-
----
-
-### 🔵 Rayleigh Model
-
-Paste into a new code cell (run after AWGN, or in a second notebook):
 
 ```python
 import os, shutil
@@ -112,52 +71,12 @@ else:
 
 ---
 
-### 🟣 Bonus: Train Both Simultaneously (Dual-GPU, T4x2 Only)
-
-```python
-import os, shutil, subprocess
-
-def setup_dir(keyword, dest):
-    os.makedirs(dest, exist_ok=True)
-    for root, dirs, files in os.walk('/kaggle/input'):
-        if 'train_prnet.py' in files and keyword in root:
-            for item in os.listdir(root):
-                src = os.path.join(root, item)
-                dst = os.path.join(dest, item)
-                shutil.copytree(src, dst, dirs_exist_ok=True) if os.path.isdir(src) else shutil.copy2(src, dst)
-            print(f"✅ {keyword} copied from: {root}")
-            return
-    print(f"❌ Could not find {keyword} directory.")
-
-setup_dir("AWGN",     "/kaggle/working/awgn_run")
-setup_dir("Rayleigh", "/kaggle/working/rayleigh_run")
-
-# Launch both simultaneously on separate GPUs — 100k steps (default)
-steps = "100000"
-# steps = "500000"  # uncomment for thesis-quality results
-
-p0 = subprocess.Popen(
-    ["python", "train_prnet.py", "--steps", steps],
-    cwd="/kaggle/working/awgn_run",
-    env={**os.environ, "CUDA_VISIBLE_DEVICES": "0"}
-)
-p1 = subprocess.Popen(
-    ["python", "train_prnet.py", "--steps", steps],
-    cwd="/kaggle/working/rayleigh_run",
-    env={**os.environ, "CUDA_VISIBLE_DEVICES": "1"}
-)
-p0.wait(); p1.wait()
-print("✅ Both models finished training.")
-```
-
----
-
 ## Step 5: Save & Download Your Trained Models
 
 Once training finishes, weights are saved in `/kaggle/working/models/`.
 
 1. Right sidebar → **Output** → open `models/`.
 2. Click **⋯** next to `prnet_lambda_0.01.weights.h5` → **Download**.
-3. Place the file into the local `models/` folder of the appropriate channel directory to run `eval_ber.py`, `eval_ccdf.py`, and `plot_constellation.py`.
+3. Place the file into the local `models/` folder of the Rayleigh directory to run `eval_ber.py`, `eval_ccdf.py`, and `plot_constellation.py`.
 
 > **Keep Alive Tip:** Use **"Save Version" → "Save & Run All (Commit)"** to run as a background job. You can close the browser and return later to download — no need to keep the tab open.

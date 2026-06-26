@@ -1,0 +1,78 @@
+% ============================================================================
+% CHAPTER 7 --- CONCLUSION AND FUTURE WORK
+% ============================================================================
+\chapter{Conclusion and Future Work}
+\label{ch:conclusion}
+
+
+This graduation project investigated the design, implementation, and evaluation of machine learning architectures for reducing PAPR in Orthogonal Frequency-Division Multiplexing (OFDM) communication systems. The high peak power of multicarrier waveforms forces the transmitter's high-power amplifier (HPA) to operate with a substantial input back-off, reducing power efficiency and causing spectral regrowth.
+
+To overcome the performance and computational trade-offs of classical methods (such as clipping regrowth, signaling overhead in Selected Mapping, and the iterative complexity of Tone Reservation), we implemented and evaluated four key machine learning frameworks:
+
+\begin{enumerate}
+    \item \textbf{Deep Autoencoders (PRNet):} In Chapter~\ref{ch:prnet}, we examined the joint end-to-end optimization of the communication chain. By representing the transmitter, channel, and receiver as a single deep neural network, PRNet dynamically learns data-dependent constellation mappings that reduce PAPR while preserving reconstruction quality (BER) without requiring explicit side information.
+    \item \textbf{Real-Valued Neural Networks (RVNN):} In Chapter~\ref{ch:rvnn}, we addressed the high parameter complexity of frequency-domain neural network structures. Shifting the processing to the time domain post-IFFT, the RVNN framework separates the complex signal into real and imaginary streams and processes them sample-by-sample using compact real-valued networks at both the transmitter and receiver.
+    \item \textbf{Deep Learning Tone Reservation (TRNet and DL-TR):} In Chapter~\ref{ch:dl_tr}, we analyzed distortionless PAPR reduction techniques. TRNet implements a data-driven feedforward network to map inputs directly to peak-cancelling signals. Building upon this, the DL-TR architecture utilizes model-driven deep unfolding (or algorithm unrolling), converting the classical iterative gradient descent method into an 8-layer deep network that learns optimal clipping thresholds and time-domain kernel weights.
+    \item \textbf{Neural Network-Based Simplified Clipping and Filtering (NN-SCF):} In Chapter~\ref{ch:nnscf}, we addressed the computational latency of iterative clipping. By mapping the deterministic noise-shaping behavior of the Simplified Clipping and Filtering (SCF) algorithm into a pair of parallel, sample-wise multi-layer perceptrons, the NN-SCF framework replaces multiple FFT/IFFT steps with one forward pass, using a custom triangular activation function to limit peak envelope power.
+\end{enumerate}
+
+% ============================================================================
+\section{Unified Technique Analysis}
+\label{sec:comparative_analysis}
+% ============================================================================
+
+The investigated neural network structures present distinct engineering trade-offs regarding computational complexity, signal degradation, and transmission parameters. Table~\ref{tab:unified_comparison} provides a comprehensive system-level comparison.
+
+\begin{table}[H]
+    \centering
+    \caption{System-level comparison of the investigated machine learning PAPR reduction techniques.}
+    \label{tab:unified_comparison}
+    \resizebox{\linewidth}{!}{%
+        \begin{tabular}{l c c c c}
+            \toprule
+            \textbf{Metric / Feature} & \textbf{PRNet}            & \textbf{RVNN}            & \textbf{DL-TR / TRNet}   & \textbf{Proposed NN-SCF}   \\
+            \midrule
+            Design Paradigm           & Autoencoder               & Autoencoder              & Model-Driven Unfolded    & Feedforward Neural Network \\
+            Signal Distortion         & Yes (Constellation Shift) & Yes                      & None (Distortionless)    & Yes (Clipping Noise)       \\
+            Spectral Efficiency       & Full ($100\%$)            & Full ($100\%$)           & Reduced (Reserved Tones) & Full ($100\%$)             \\
+            Receiver Processing       & Required (DNN Decoder)    & Required (Decompression) & Standard (No NN)         & Standard (No NN)           \\
+            Complexity Level          & High (Dense FC)           & Low (Sample-wise)        & Very Low                 & Moderate                   \\
+            \bottomrule
+        \end{tabular}%
+    }
+\end{table}
+
+This analysis reveals that:
+\begin{itemize}
+    \item \textbf{PRNet} achieves joint PAPR and BER optimization by replacing traditional transceiver blocks. However, its fully connected frequency-domain layers result in a massive parameter footprint that does not scale efficiently to high subcarrier counts $N \ge 256$.
+    \item \textbf{RVNN} scales processing down to the time-domain sample level, achieving a lightweight footprint at the cost of requiring joint decompression networks at the receiver, which makes it sensitive to channel fading variations.
+    \item \textbf{DL-TR} provides a completely distortionless transmission by reserving subcarriers, thereby preserving the original constellation integrity and maintaining standard receiver structures. Its model-driven unfolding approach allows it to converge efficiently with few parameters.
+    \item \textbf{NN-SCF} represents a low latency configuration at the transmitter. Operating sample-by-sample post-IFFT, it replaces the three Fourier transforms of classical SCF with a $1\text{--}2\text{--}1\text{--}1$ MLP structure. However, the limited capacity of this network leads to an SNR penalty under higher-order modulations (such as 16-QAM).
+\end{itemize}
+
+% ============================================================================
+\section{Practical Limitations of Deep Learning in PAPR Reduction}
+\label{sec:conclusion_limitations}
+% ============================================================================
+
+Despite the advantages demonstrated through simulations, several systematic limitations remain for deep learning physical-layer architectures:
+
+\begin{itemize}
+    \item \textbf{Configuration Rigidity:} The parameters of the trained models are highly dependent on the training configuration. Any modification in system parameters, such as the clipping ratio, modulation scheme, subcarrier count, or channel noise power, degrades performance and requires model retraining.
+    \item \textbf{Training and Optimization Constraints:} Standard deep learning frameworks rely on first-order optimization algorithms (such as Adam). Second-order training methods (such as the Levenberg-Marquardt algorithm proposed in classical literature) are difficult to scale efficiently on large-scale datasets, which restricts the convergence speed and optimal fitting of compact models.
+\end{itemize}
+
+% ============================================================================
+\section{Future Work Directions}
+\label{sec:future_work}
+% ============================================================================
+
+To address the limitations identified in this work and advance the integration of machine learning in multicarrier systems, several research paths are suggested:
+
+\begin{itemize}
+    \item \textbf{Spatiotemporal and Sequence Architectures:} Future implementations can replace feedforward networks with sequence-based models, such as Convolutional Neural Networks (CNNs) or Recurrent Neural Networks (RNNs). These architectures exploit temporal correlations and memory patterns across neighboring samples, better emulating frequency-domain filtering operations.
+    \item \textbf{Generalized and Parameterized Networks:} To improve generalization, research should focus on designing networks that accept configuration parameters (such as clipping ratio or modulation order) as auxiliary inputs. This allows a pre-trained model to generalize across varying transmission environments.
+    \item \textbf{Scalability to High Subcarrier Counts:} The models should be evaluated on larger systems (such as $N = 1024$ or $2048$ subcarriers) typical of modern standards (LTE/5G). Investigating how parameter size scales under high subcarrier counts is essential to establish practical performance bounds.
+    \item \textbf{Practical Implementation:} The simulated performance should be validated under real-world conditions by implementing the trained neural network models on Software-Defined Radio (SDR) platforms (such as USRPs with FPGA acceleration). This enables testing under realistic multipath channels and hardware non-linearities.
+    \item \textbf{Alternative Waveforms:} Future research should investigate the applicability of these machine learning architectures to multicarrier waveforms other than OFDM (such as OTFS or GFDM), which present unique peak power characteristics and channel interactions.
+\end{itemize}
